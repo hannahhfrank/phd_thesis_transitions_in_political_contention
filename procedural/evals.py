@@ -4,9 +4,18 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import warnings
 warnings.filterwarnings('ignore', category=RuntimeWarning)
+import matplotlib as mpl
+import os
+os.environ['PATH'] = "/Library/TeX/texbin:" + os.environ.get('PATH', '')
+mpl.rcParams['text.usetex'] = True
+mpl.rcParams['font.family'] = 'serif'
+mpl.rcParams['font.serif'] = ['Computer Modern Roman']
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{lmodern}\usepackage[T1]{fontenc}'
+from matplotlib.ticker import MaxNLocator
 
-plot_params = {"text.usetex":True,"font.family":"serif","font.size":20,"xtick.labelsize":20,"ytick.labelsize":20,"axes.labelsize":20,"figure.titlesize":20,"figure.figsize":(8,5)}
-plt.rcParams.update(plot_params)
+plt.rcParams['xtick.labelsize'] = 20  # X-axis tick label size
+plt.rcParams['ytick.labelsize'] = 20  # Y-axis tick label size
+plt.rcParams['axes.labelsize'] = 20  # applies to both x and y axis labels
 
 def evals(y_true, y_pred, countries, onset_tolerance=3, alpha=0.7, beta=0.3, horizon=24):
 
@@ -154,8 +163,10 @@ print(f"Mean MSE {evals_zinb['Mean MSE']}")
 print(f"Normalized MSE {evals_zinb['Normalized MSE']}")
 print(f"Final Score {evals_zinb['Final Score']}")
 
-catcher=pd.read_csv("out/catcher.csv",index_col=0)
-catcher=catcher.loc[catcher["dd"]>="2022-01"]
+catcher2022=pd.read_csv("out/catcher_2022.csv",index_col=0)
+catcher2023=pd.read_csv("out/catcher_2023.csv",index_col=0)
+catcher = pd.concat([catcher2022, catcher2023], axis=0)
+catcher = catcher.sort_values(by=["country","dd"])
 evals_catcher = evals(catcher.sb_fatalities, catcher.preds, catcher.country)
 print(f"Difference Explained {evals_catcher['Difference Explained']}")
 print(f"Onset Score {evals_catcher['Onset Score']}")
@@ -245,9 +256,9 @@ plt.text(mean_onset["mean"][4]+0.004, mean_de["mean"][4]+0.004, "Ensemble", size
 ax.set_yticks([0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8])
 ax.set_xticks([0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4])
 
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/procedural/out/proc_main.png",dpi=300,bbox_inches='tight')        
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/proc_main.png",dpi=300,bbox_inches='tight')
-plt.savefig("out/proc_main.png",dpi=300,bbox_inches='tight')        
+plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/procedural/out/proc_main.eps",dpi=300,bbox_inches='tight')        
+plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/proc_main.eps",dpi=300,bbox_inches='tight')
+plt.savefig("out/proc_main.eps",dpi=300,bbox_inches='tight')        
         
 
 ### By country ###
@@ -381,16 +392,19 @@ for i in range(len(add)):
     plt.annotate(f'{point["country"]}', (point["onset_catcher"], point["de_catcher"]), ha='center',size=12,textcoords="offset points",xytext=(0,4),color="black")
                                                                                                                
                                                                                                          
-plt.savefig("out/proc_scatter.png",dpi=300,bbox_inches='tight')    
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/procedural/out/proc_scatter.png",dpi=300,bbox_inches='tight')        
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/proc_scatter.png",dpi=300,bbox_inches='tight')    
+plt.savefig("out/proc_scatter.eps",dpi=300,bbox_inches='tight')    
+plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/procedural/out/proc_scatter.eps",dpi=300,bbox_inches='tight')        
+plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/proc_scatter.eps",dpi=300,bbox_inches='tight')    
 
 
 ########################
 ### Prediction plots ###
 ########################
 
-catcher=pd.read_csv("out/catcher.csv",index_col=0)
+catcher2022=pd.read_csv("out/catcher_2022.csv",index_col=0)
+catcher2023=pd.read_csv("out/catcher_2023.csv",index_col=0)
+catcher = pd.concat([catcher2022, catcher2023], axis=0)
+catcher = catcher.sort_values(by=["country","dd"])
 df=pd.read_csv("data/data_out/ucdp_cm_sb.csv",index_col=0)
 codes=df[["country","gw_codes"]].drop_duplicates()
 catcher=pd.merge(left=catcher,right=codes,on=["country"],how="left")
@@ -410,7 +424,8 @@ for c in views.gw_codes.unique():
     #ax1.plot(df_ss["dd"].loc[df_ss["year"]==2022],df_ss["preds"].loc[df_ss["year"]==2022],color="black",linestyle="dashed")   
     ax1.plot(df_sss["dd"].loc[df_sss["year"]==2022],df_sss["preds"].loc[df_sss["year"]==2022],color="black",marker="x",markersize=9,linestyle="dashed")   
     ax1.set_xticks(["2022-01","2022-03","2022-05","2022-07","2022-09","2022-11"],["01-22","03-22","05-22","07-22","09-22","11-22"])
-    
+    ax1.yaxis.set_major_locator(MaxNLocator(integer=True))
+
     ax2 = fig.add_subplot(gs[1])    
     ax2.plot(df_s["dd"].loc[df_s["year"]==2023],df_s["sb_fatalities"].loc[df_s["year"]==2023],color="black")
     #ax2.plot(df_s["dd"].loc[df_s["year"]==2023],df_s["preds"].loc[df_s["year"]==2023],color="black",linestyle="dotted")
@@ -420,12 +435,13 @@ for c in views.gw_codes.unique():
     ax2.yaxis.set_ticks_position('right')
     ax2.yaxis.set_label_position('right')
     gs.update(wspace=0)    
-    
+    ax2.yaxis.set_major_locator(MaxNLocator(integer=True))
+
     #fig.suptitle(views["country"].loc[views["gw_codes"]==c].iloc[0],size=30)
     if df_sss.preds.max()!=0:
-        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/procedural/out/proc_preds_{views['country'].loc[views['gw_codes']==c].iloc[0]}.png",dpi=300,bbox_inches='tight')        
-        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/proc_preds_{views['country'].loc[views['gw_codes']==c].iloc[0]}.png",dpi=300,bbox_inches='tight')
-        plt.savefig(f"out/proc_preds_{views['country'].loc[views['gw_codes']==c].iloc[0]}.png",dpi=300,bbox_inches='tight')    
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/procedural/out/proc_preds_{views['country'].loc[views['gw_codes']==c].iloc[0]}.eps",dpi=300,bbox_inches='tight')        
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/proc_preds_{views['country'].loc[views['gw_codes']==c].iloc[0]}.eps",dpi=300,bbox_inches='tight')
+        plt.savefig(f"out/proc_preds_{views['country'].loc[views['gw_codes']==c].iloc[0]}.eps",dpi=300,bbox_inches='tight')    
     plt.show()   
 
 
