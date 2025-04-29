@@ -2,7 +2,15 @@ import pandas as pd
 import numpy as np
 from functions import dichotomize,lag_groupped,consec_zeros_grouped,apply_decay,imp_opti,calibrate_imp,get_wb,simple_imp_grouped,linear_imp_grouped
 import matplotlib.pyplot as plt
-
+import matplotlib as mpl
+import os
+os.environ['PATH'] = "/Library/TeX/texbin:" + os.environ.get('PATH', '')
+mpl.rcParams['text.usetex'] = True
+mpl.rcParams['font.family'] = 'serif'
+mpl.rcParams['font.serif'] = ['Computer Modern Roman']
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{lmodern}\usepackage[T1]{fontenc}'
+plt.rcParams['xtick.labelsize'] = 20  # X-axis tick label size
+plt.rcParams['ytick.labelsize'] = 20  # Y-axis tick label size
 
 # Country definitions: http://ksgleditsch.com/statelist.html
 
@@ -61,15 +69,15 @@ exclude2 ={"Taiwan":713, # Not included in WDI
 ### UCDP ###
 ############
 
-ucdp_sb=pd.read_csv("data/data_out/ucdp_cy_sb.csv",index_col=0)
+ucdp_sb=pd.read_csv("/Users/hannahfrank/phd_thesis_transitions_pol_contention/data/data_out/ucdp_cy_sb.csv",index_col=0)
 ucdp_sb_s = ucdp_sb[["year","gw_codes","country","best","count"]][~ucdp_sb['gw_codes'].isin(list(micro_states.values())+list(exclude.values())+list(exclude2.values()))]
 ucdp_sb_s.columns=["year","gw_codes","country","sb_fatalities","sb_event_counts"]
 
-ucdp_osv=pd.read_csv("data/data_out/ucdp_cy_osv.csv",index_col=0)
+ucdp_osv=pd.read_csv("/Users/hannahfrank/phd_thesis_transitions_pol_contention/data/data_out/ucdp_cy_osv.csv",index_col=0)
 ucdp_osv_s = ucdp_osv[["year","gw_codes","best","count"]][~ucdp_osv['gw_codes'].isin(list(micro_states.values())+list(exclude.values())+list(exclude2.values()))]
 ucdp_osv_s.columns=["year","gw_codes","osv_fatalities","osv_event_counts"]
 
-ucdp_ns=pd.read_csv("data/data_out/ucdp_cy_ns.csv",index_col=0)
+ucdp_ns=pd.read_csv("/Users/hannahfrank/phd_thesis_transitions_pol_contention/data/data_out/ucdp_cy_ns.csv",index_col=0)
 ucdp_ns_s = ucdp_ns[["year","gw_codes","best","count"]][~ucdp_ns['gw_codes'].isin(list(micro_states.values())+list(exclude.values())+list(exclude2.values()))]
 ucdp_ns_s.columns=["year","gw_codes","ns_fatalities","ns_event_counts"]
 
@@ -77,17 +85,24 @@ ucdp_ns_s.columns=["year","gw_codes","ns_fatalities","ns_event_counts"]
 ### ACLED ###
 #############
 
-acled_protest=pd.read_csv("data/data_out/acled_cy_protest.csv",index_col=0)
+acled_protest=pd.read_csv("/Users/hannahfrank/phd_thesis_transitions_pol_contention/data/data_out/acled_cy_protest.csv",index_col=0)
 acled_protest_s = acled_protest[["year","gw_codes","n_protest_events","fatalities"]][~acled_protest['gw_codes'].isin(list(micro_states.values())+list(exclude.values())+list(exclude2.values()))]
 acled_protest_s.columns=["year","gw_codes","protest_event_counts","protest_fatalities"]
 
-acled_riots=pd.read_csv("data/data_out/acled_cy_riots.csv",index_col=0)
+acled_riots=pd.read_csv("/Users/hannahfrank/phd_thesis_transitions_pol_contention/data/data_out/acled_cy_riots.csv",index_col=0)
 acled_riots_s = acled_riots[["year","gw_codes","n_riot_events","fatalities"]][~acled_riots['gw_codes'].isin(list(micro_states.values())+list(exclude.values())+list(exclude2.values()))]
 acled_riots_s.columns=["year","gw_codes","riot_event_counts","riot_fatalities"]
 
-acled_remote=pd.read_csv("data/data_out/acled_cy_remote.csv",index_col=0)
-acled_remote_s = acled_remote[["year","gw_codes","n_remote_events","fatalities"]][~acled_riots['gw_codes'].isin(list(micro_states.values())+list(exclude.values())+list(exclude2.values()))]
-acled_remote_s.columns=["year","gw_codes","remote_event_counts","remote_fatalities"]
+# Temporal coverage overall 1997-2022, but varies for each country
+
+###########
+### GTD ###
+###########
+
+gtd=pd.read_csv("/Users/hannahfrank/phd_thesis_transitions_pol_contention/data/data_out/gtd_cy_attacks.csv",index_col=0)
+gtd_s=gtd.loc[gtd["year"]>=1989]
+gtd_ss = gtd_s[["year","gw_codes","n_attack","fatalities"]][~gtd_s['gw_codes'].isin(list(micro_states.values())+list(exclude.values())+list(exclude2.values()))]
+gtd_ss.columns=["year","gw_codes","terrorism_event_counts","terrorism_fatalities"]
 
 # Additional countries not included in ACLED: 
 # 265 German Democratic Republic	
@@ -104,7 +119,7 @@ df=pd.merge(left=ucdp_sb_s,right=ucdp_ns_s,on=["year","gw_codes"],how="left")
 df=pd.merge(left=df,right=ucdp_osv_s,on=["year","gw_codes"],how="left")
 df=pd.merge(left=df,right=acled_protest_s,on=["year","gw_codes"],how="left")
 df=pd.merge(left=df,right=acled_riots_s,on=["year","gw_codes"],how="left")
-df=pd.merge(left=df,right=acled_remote_s,on=["year","gw_codes"],how="left")
+df=pd.merge(left=df,right=gtd_ss,on=["year","gw_codes"],how="left")
 df=df.fillna(0)
 
 ###############
@@ -117,15 +132,15 @@ dichotomize(df,"riot_event_counts","d_riot",25)
 dichotomize(df,"sb_fatalities","d_sb",0)
 dichotomize(df,"osv_fatalities","d_osv",0)
 dichotomize(df,"ns_fatalities","d_ns",0)
-dichotomize(df,"remote_fatalities","d_remote",0)
+dichotomize(df,"terrorism_fatalities","d_terror",0)
 dichotomize(df,"sb_fatalities","d_civil_war",1000)
 dichotomize(df,"sb_fatalities","d_civil_conflict",25)
 
 # Final df
-df_out=df[["year","gw_codes","country","d_protest","d_riot","d_sb","d_osv","d_ns","d_remote","protest_event_counts","riot_event_counts","sb_fatalities","osv_fatalities","ns_fatalities","remote_fatalities","d_civil_conflict","d_civil_war"]].copy()
+df_out=df[["year","gw_codes","country","d_protest","d_riot","d_sb","d_osv","d_ns","d_terror","protest_event_counts","riot_event_counts","sb_fatalities","osv_fatalities","ns_fatalities","terrorism_fatalities","d_civil_conflict","d_civil_war"]].copy()
 print(df_out.isna().any())
 df_out.to_csv("out/df_out_full.csv") 
-df_complete=df[["year","gw_codes","country","d_protest","d_riot","d_sb","d_osv","d_ns","d_remote","protest_event_counts","riot_event_counts","sb_fatalities","osv_fatalities","ns_fatalities","remote_fatalities","d_civil_conflict","d_civil_war"]].copy()
+df_complete=df[["year","gw_codes","country","d_protest","d_riot","d_sb","d_osv","d_ns","d_terror","protest_event_counts","riot_event_counts","sb_fatalities","osv_fatalities","ns_fatalities","terrorism_fatalities","d_civil_conflict","d_civil_war"]].copy()
 
 #####################
 ### History theme ###
@@ -133,13 +148,13 @@ df_complete=df[["year","gw_codes","country","d_protest","d_riot","d_sb","d_osv",
 
 # A. t-1 model 
 
-df_conf_hist=df_out[["year","gw_codes","country","d_protest","d_riot","d_sb","d_osv","d_ns","d_remote","protest_event_counts","riot_event_counts","sb_fatalities","osv_fatalities","ns_fatalities","remote_fatalities"]].copy()
+df_conf_hist=df_out[["year","gw_codes","country","d_protest","d_riot","d_sb","d_osv","d_ns","d_terror","protest_event_counts","riot_event_counts","sb_fatalities","osv_fatalities","ns_fatalities","terrorism_fatalities"]].copy()
 df_conf_hist["d_protest_lag1"]=lag_groupped(df,"country","d_protest",1)
 df_conf_hist["d_riot_lag1"]=lag_groupped(df,"country","d_riot",1)
 df_conf_hist["d_sb_lag1"]=lag_groupped(df,"country","d_sb",1)
 df_conf_hist["d_osv_lag1"]=lag_groupped(df,"country","d_osv",1)
 df_conf_hist["d_ns_lag1"]=lag_groupped(df,"country","d_ns",1)
-df_conf_hist["d_remote_lag1"]=lag_groupped(df,"country","d_remote",1)
+df_conf_hist["d_terror_lag1"]=lag_groupped(df,"country","d_terror",1)
 df_conf_hist["d_civil_war_lag1"]=lag_groupped(df,"country","d_civil_war",1)
 df_conf_hist["d_civil_conflict_lag1"]=lag_groupped(df,"country","d_civil_conflict",1)
 df_conf_hist["protest_event_counts_lag1"]=lag_groupped(df,"country","protest_event_counts",1)
@@ -147,7 +162,7 @@ df_conf_hist["riot_event_counts_lag1"]=lag_groupped(df,"country","riot_event_cou
 df_conf_hist["sb_fatalities_lag1"]=lag_groupped(df,"country","sb_fatalities",1)
 df_conf_hist["osv_fatalities_lag1"]=lag_groupped(df,"country","osv_fatalities",1)
 df_conf_hist["ns_fatalities_lag1"]=lag_groupped(df,"country","ns_fatalities",1)
-df_conf_hist["remote_fatalities_lag1"]=lag_groupped(df,"country","remote_fatalities",1)
+df_conf_hist["terrorism_fatalities_lag1"]=lag_groupped(df,"country","terrorism_fatalities",1)
 
 # B. Time since 
 
@@ -161,8 +176,8 @@ df_conf_hist['d_osv_zeros'] = consec_zeros_grouped(df,'country','d_osv')
 df_conf_hist['d_osv_zeros_decay'] = apply_decay(df_conf_hist,'d_osv_zeros')
 df_conf_hist['d_ns_zeros'] = consec_zeros_grouped(df,'country','d_ns')
 df_conf_hist['d_ns_zeros_decay'] = apply_decay(df_conf_hist,'d_ns_zeros')
-df_conf_hist['d_remote_zeros'] = consec_zeros_grouped(df,'country','d_remote')
-df_conf_hist['d_remote_zeros_decay'] = apply_decay(df_conf_hist,'d_remote_zeros')
+df_conf_hist['d_terror_zeros'] = consec_zeros_grouped(df,'country','d_terror')
+df_conf_hist['d_terror_zeros_decay'] = apply_decay(df_conf_hist,'d_terror_zeros')
 df_conf_hist['d_civil_war_zeros'] = consec_zeros_grouped(df,'country','d_civil_war')
 df_conf_hist['d_civil_war_zeros_decay'] = apply_decay(df_conf_hist,'d_civil_war_zeros')
 df_conf_hist['d_civil_conflict_zeros'] = consec_zeros_grouped(df,'country','d_civil_conflict')
@@ -334,9 +349,9 @@ df_conf_hist=pd.merge(left=df_conf_hist,right=df_neighbors[["year","gw_codes","d
 neighbors=pd.read_csv("data/data_out/cy_neighbors.csv",index_col=0)
 gw_codes=pd.read_csv("data/df_ccodes_gw.csv")
 gw_codes_s=gw_codes.loc[gw_codes["end"]>=1989]
-df_neighbors=pd.merge(left=df_out[["year","country","gw_codes","remote_fatalities"]],right=neighbors[["gw_codes","year","neighbors"]],on=["year","gw_codes"],how="left")
+df_neighbors=pd.merge(left=df_out[["year","country","gw_codes","terrorism_fatalities"]],right=neighbors[["gw_codes","year","neighbors"]],on=["year","gw_codes"],how="left")
 
-df_neighbors["neighbors_remote"]=0
+df_neighbors["neighbors_terror"]=0
 for i in range(len(df_neighbors)):
     if pd.isna(df_neighbors["neighbors"].iloc[i]): 
         pass
@@ -345,14 +360,14 @@ for i in range(len(df_neighbors)):
         counts=0
         for x in lst:
             c=int(gw_codes_s["gw_codes"].loc[gw_codes_s["country"]==x].iloc[0])
-            if df_neighbors["remote_fatalities"].loc[(df_neighbors["year"]==df_neighbors["year"].iloc[i])&(df_neighbors["gw_codes"]==c)].empty==False:
-                counts+=int(df_neighbors["remote_fatalities"].loc[(df_neighbors["year"]==df_neighbors["year"].iloc[i])&(df_neighbors["gw_codes"]==c)].iloc[0])
+            if df_neighbors["terrorism_fatalities"].loc[(df_neighbors["year"]==df_neighbors["year"].iloc[i])&(df_neighbors["gw_codes"]==c)].empty==False:
+                counts+=int(df_neighbors["terrorism_fatalities"].loc[(df_neighbors["year"]==df_neighbors["year"].iloc[i])&(df_neighbors["gw_codes"]==c)].iloc[0])
         if counts>0:
-            df_neighbors.iloc[i, df_neighbors.columns.get_loc('neighbors_remote')] = counts
+            df_neighbors.iloc[i, df_neighbors.columns.get_loc('neighbors_terror')] = counts
 
-dichotomize(df_neighbors,"neighbors_remote","d_neighbors_remote_fatalities",0)
-df_neighbors['d_neighbors_remote_fatalities_lag1'] = lag_groupped(df_neighbors,'country','d_neighbors_remote_fatalities',1)
-df_conf_hist=pd.merge(left=df_conf_hist,right=df_neighbors[["year","gw_codes","d_neighbors_remote_fatalities_lag1"]],on=["year","gw_codes"],how="left")
+dichotomize(df_neighbors,"neighbors_terror","d_neighbors_terrorism_fatalities",0)
+df_neighbors['d_neighbors_terrorism_fatalities_lag1'] = lag_groupped(df_neighbors,'country','d_neighbors_terrorism_fatalities',1)
+df_conf_hist=pd.merge(left=df_conf_hist,right=df_neighbors[["year","gw_codes","d_neighbors_terrorism_fatalities_lag1"]],on=["year","gw_codes"],how="left")
 
 # H. Neighbor conflict history civil war 
 neighbors=pd.read_csv("data/data_out/cy_neighbors.csv",index_col=0)
@@ -446,10 +461,10 @@ for c in base.gw_codes.unique():
         
 df_conf_hist=pd.merge(left=df_conf_hist,right=base[["year","gw_codes","regime_duration"]],on=["year","gw_codes"],how="left")
 
-# J. Refugees 
+## J. Refugees 
 
 base=df_out[["year","gw_codes","country"]].copy()
-feat_dev = ["SM.POP.REFG","SP.POP.TOTL"]
+feat_dev = ["SM.POP.RHCR.EO","SP.POP.TOTL"]
 
 # Import country codes  
 df_ccodes = pd.read_csv("data/df_ccodes.csv")
@@ -460,29 +475,29 @@ c_list = [char for char in c_list if char != "XYZ"]
 demog=get_wb(list(range(1989, 2024, 1)),c_list,feat_dev)
 
 # Merge
-base=pd.merge(left=base,right=demog[["year","gw_codes","SM.POP.REFG","SP.POP.TOTL"]],on=["year","gw_codes"],how="left")
+base=pd.merge(left=base,right=demog[["year","gw_codes","SM.POP.RHCR.EO","SP.POP.TOTL"]],on=["year","gw_codes"],how="left")
     
 ### Multiple ###
 
-base_imp=imp_opti(base,"country",["SM.POP.REFG"],vars_add=["SP.POP.TOTL"],max_iter=10)
+base_imp=imp_opti(base,"country",["SM.POP.RHCR.EO"],vars_add=["SP.POP.TOTL"],max_iter=10)
 
 # Calibrate 
-base_imp_calib=calibrate_imp(base_imp, "country", "SM.POP.REFG")
+base_imp_calib=calibrate_imp(base_imp, "country", "SM.POP.RHCR.EO")
 
 ### Simple ###
 
-base_imp_final=linear_imp_grouped(base,"country",["SM.POP.REFG"])
-base_imp_final=simple_imp_grouped(base_imp_final,"country",["SM.POP.REFG"])
+base_imp_final=linear_imp_grouped(base,"country",["SM.POP.RHCR.EO"])
+base_imp_final=simple_imp_grouped(base_imp_final,"country",["SM.POP.RHCR.EO"])
 
 # Merge
-base_imp_final['SM.POP.REFG'] = base_imp_final['SM.POP.REFG'].fillna(base_imp_calib['SM.POP.REFG'])
+base_imp_final['SM.POP.RHCR.EO'] = base_imp_final['SM.POP.RHCR.EO'].fillna(base_imp_calib['SM.POP.RHCR.EO'])
 base_imp_final['pop_refugee_id'] = base_imp["missing_id"]
-base_imp_final = base_imp_final.rename(columns={'SM.POP.REFG': 'pop_refugee'})
+base_imp_final = base_imp_final.rename(columns={'SM.POP.RHCR.EO': 'pop_refugee'})
 
 # Validate
 #for c in base.country.unique():
 #    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-#    axs[0].plot(base["year"].loc[base["country"]==c], base["SM.POP.REFG"].loc[base["country"]==c])
+#    axs[0].plot(base["year"].loc[base["country"]==c], base["SM.POP.RHCR.EO"].loc[base["country"]==c])
 #    axs[1].plot(base_imp_final["year"].loc[base_imp_final["country"]==c], base_imp_final["pop_refugee"].loc[base_imp_final["country"]==c])
 #    axs[0].set_title(c)
 #    plt.show()
@@ -491,13 +506,13 @@ base_imp_final = base_imp_final.rename(columns={'SM.POP.REFG': 'pop_refugee'})
 df_conf_hist=pd.merge(left=df_conf_hist,right=base_imp_final[["year","gw_codes","pop_refugee",'pop_refugee_id']],on=["year","gw_codes"],how="left")
 
 # Final df
-df_conf_hist=df_conf_hist[["year","gw_codes","country","d_protest_lag1","d_riot_lag1","d_riot_lag1","d_sb_lag1","d_osv_lag1","d_ns_lag1","d_remote_lag1","d_civil_war_lag1","d_civil_conflict_lag1","protest_event_counts_lag1","riot_event_counts_lag1","sb_fatalities_lag1","osv_fatalities_lag1","ns_fatalities_lag1","remote_fatalities_lag1","d_protest_zeros_decay","d_riot_zeros_decay","d_sb_zeros_decay","d_osv_zeros_decay","d_ns_zeros_decay","d_remote_zeros_decay",'d_civil_conflict_zeros_decay','d_civil_war_zeros_decay',"d_neighbors_proteset_event_counts_lag1","d_neighbors_riot_event_counts_lag1","d_neighbors_sb_fatalities_lag1","d_neighbors_osv_fatalities_lag1","d_neighbors_ns_fatalities_lag1","d_neighbors_remote_fatalities_lag1","d_neighbors_civil_war_lag1","d_neighbors_civil_conflict_lag1","regime_duration","pop_refugee",'pop_refugee_id']].copy()
+df_conf_hist=df_conf_hist[["year","gw_codes","country","d_protest_lag1","d_riot_lag1","d_riot_lag1","d_sb_lag1","d_osv_lag1","d_ns_lag1","d_terror_lag1","d_civil_war_lag1","d_civil_conflict_lag1","protest_event_counts_lag1","riot_event_counts_lag1","sb_fatalities_lag1","osv_fatalities_lag1","ns_fatalities_lag1","terrorism_fatalities_lag1","d_protest_zeros_decay","d_riot_zeros_decay","d_sb_zeros_decay","d_osv_zeros_decay","d_ns_zeros_decay","d_terror_zeros_decay",'d_civil_conflict_zeros_decay','d_civil_war_zeros_decay',"d_neighbors_proteset_event_counts_lag1","d_neighbors_riot_event_counts_lag1","d_neighbors_sb_fatalities_lag1","d_neighbors_osv_fatalities_lag1","d_neighbors_ns_fatalities_lag1","d_neighbors_terrorism_fatalities_lag1","d_neighbors_civil_war_lag1","d_neighbors_civil_conflict_lag1","regime_duration","pop_refugee",'pop_refugee_id']].copy()
 print(df_conf_hist.isna().any())
 print(df_conf_hist.min())
 df_conf_hist.to_csv("out/df_conf_hist_full.csv")  
 
 # Merge df
-df_complete=pd.merge(left=df_complete,right=df_conf_hist[["year","gw_codes","d_protest_lag1","d_riot_lag1","d_sb_lag1","d_osv_lag1","d_ns_lag1","d_remote_lag1","d_civil_war_lag1","d_civil_conflict_lag1","protest_event_counts_lag1","riot_event_counts_lag1","sb_fatalities_lag1","osv_fatalities_lag1","ns_fatalities_lag1","remote_fatalities_lag1","d_protest_zeros_decay","d_protest_zeros_decay","d_sb_zeros_decay","d_osv_zeros_decay","d_ns_zeros_decay","d_remote_zeros_decay",'d_civil_conflict_zeros_decay','d_civil_war_zeros_decay',"d_neighbors_proteset_event_counts_lag1","d_neighbors_riot_event_counts_lag1","d_neighbors_sb_fatalities_lag1","d_neighbors_osv_fatalities_lag1","d_neighbors_ns_fatalities_lag1","d_neighbors_remote_fatalities_lag1","d_neighbors_civil_war_lag1","d_neighbors_civil_conflict_lag1","regime_duration"]],on=["year","gw_codes"],how="left")
+df_complete=pd.merge(left=df_complete,right=df_conf_hist[["year","gw_codes","d_protest_lag1","d_riot_lag1","d_sb_lag1","d_osv_lag1","d_ns_lag1","d_terror_lag1","d_civil_war_lag1","d_civil_conflict_lag1","protest_event_counts_lag1","riot_event_counts_lag1","sb_fatalities_lag1","osv_fatalities_lag1","ns_fatalities_lag1","terrorism_fatalities_lag1","d_protest_zeros_decay","d_protest_zeros_decay","d_sb_zeros_decay","d_osv_zeros_decay","d_ns_zeros_decay","d_terror_zeros_decay",'d_civil_conflict_zeros_decay','d_civil_war_zeros_decay',"d_neighbors_proteset_event_counts_lag1","d_neighbors_riot_event_counts_lag1","d_neighbors_sb_fatalities_lag1","d_neighbors_osv_fatalities_lag1","d_neighbors_ns_fatalities_lag1","d_neighbors_terrorism_fatalities_lag1","d_neighbors_civil_war_lag1","d_neighbors_civil_conflict_lag1","regime_duration","pop_refugee",'pop_refugee_id']],on=["year","gw_codes"],how="left")
 
 ########################
 ### Demography theme ###
@@ -622,12 +637,16 @@ base_imp_final=simple_imp_grouped(base_imp_final,"country",["group_counts"])
 base_imp_final['group_counts_id'] = base["group_counts"].isnull().astype(int)
 
 # Validate
-#for c in base.country.unique():
-#    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-#    axs[0].plot(base["year"].loc[base["country"]==c], base["group_counts"].loc[base["country"]==c])
-#    axs[1].plot(base_imp_final["year"].loc[base_imp_final["country"]==c], base_imp_final["group_counts"].loc[base_imp_final["country"]==c])
-#    axs[0].set_title(c)
-#    plt.show()
+for c in base.country.unique():
+    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+    axs[0].plot(base["year"].loc[base["country"]==c], base["group_counts"].loc[base["country"]==c],c="black")
+    axs[1].plot(base_imp_final["year"].loc[base_imp_final["country"]==c], base_imp_final["group_counts"].loc[base_imp_final["country"]==c],c="black")
+    axs[0].set_title(c,size=20)
+    if c=="Iraq":
+        plt.savefig("out/vars.eps",dpi=300,bbox_inches='tight')
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_missin1.eps",dpi=300,bbox_inches='tight')        
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/struc_missin1.eps",dpi=300,bbox_inches='tight')
+    plt.show()
 
 df_demog=pd.merge(left=df_demog,right=base_imp_final[["year","gw_codes","group_counts",'group_counts_id']],on=["year","gw_codes"],how="left")
 
@@ -796,12 +815,16 @@ base_imp_final['oil_deposits'] = base_imp_final['oil_deposits'].fillna(base_imp_
 base_imp_final['oil_deposits_id'] = base_imp["missing_id"]
 
 # Validate
-#for c in base.country.unique():
-#    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-#    axs[0].plot(base["year"].loc[base["country"]==c], base["oil_deposits"].loc[base["country"]==c])
-#    axs[1].plot(base_imp_final["year"].loc[base_imp_final["country"]==c], base_imp_final["oil_deposits"].loc[base_imp_final["country"]==c])
-#    axs[0].set_title(c)
-#    plt.show()
+for c in base.country.unique():
+    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+    axs[0].plot(base["year"].loc[base["country"]==c], base["oil_deposits"].loc[base["country"]==c],c="black")
+    axs[1].plot(base_imp_final["year"].loc[base_imp_final["country"]==c], base_imp_final["oil_deposits"].loc[base_imp_final["country"]==c],c="black")
+    axs[0].set_title(c,size=20)
+    if c=="Russia (Soviet Union)":
+        plt.savefig("out/vars.eps",dpi=300,bbox_inches='tight')
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_missin2.eps",dpi=300,bbox_inches='tight')        
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/struc_missin2.eps",dpi=300,bbox_inches='tight')
+    plt.show()
 
 # Merge
 df_econ=df_out[["year","gw_codes","country"]].copy()
@@ -985,9 +1008,9 @@ base_imp_final = base_imp_final.rename(columns={"NY.GDP.PETR.RT.ZS": 'oil_share'
 # Validate
 #for c in base.country.unique():
 #    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-#    axs[0].plot(base["year"].loc[base["country"]==c], base["NY.GDP.PETR.RT.ZS"].loc[base["country"]==c])
-#    axs[1].plot(base_imp_final["year"].loc[base_imp_final["country"]==c], base_imp_final["oil_share"].loc[base_imp_final["country"]==c])
-#    axs[0].set_title(c)
+#    axs[0].plot(base["year"].loc[base["country"]==c], base["NY.GDP.PETR.RT.ZS"].loc[base["country"]==c],c="black")
+#    axs[1].plot(base_imp_final["year"].loc[base_imp_final["country"]==c], base_imp_final["oil_share"].loc[base_imp_final["country"]==c],c="black")
+#    axs[0].set_title(c,size=20)
 #    plt.show()
 
 # Merge
@@ -1598,20 +1621,20 @@ base=pd.merge(left=base,right=economy[["year","gw_codes","NY.GDP.PCAP.CD","NY.GN
 
 ### Multiple ###
 
-base_imp=imp_opti(base,"country",["SP.DYN.TFRT.IN"],vars_add=["SP.POP.GROW","SP.DYN.LE00.FE.IN","SP.DYN.LE00.MA.IN","SP.DYN.IMRT.IN"],max_iter=10)
+#base_imp=imp_opti(base,"country",["SP.DYN.TFRT.IN"],vars_add=["SP.POP.GROW","SP.DYN.LE00.FE.IN","SP.DYN.LE00.MA.IN","SP.DYN.IMRT.IN"],max_iter=10)
 
 # Calibrate 
-base_imp_calib=calibrate_imp(base_imp, "country","SP.DYN.TFRT.IN")
+#base_imp_calib=calibrate_imp(base_imp, "country","SP.DYN.TFRT.IN")
 
 ### Simple ###
 
-base_imp_final=linear_imp_grouped(base,"country",["SP.DYN.TFRT.IN"])
-base_imp_final=simple_imp_grouped(base_imp_final,"country",["SP.DYN.TFRT.IN"])
+#base_imp_final=linear_imp_grouped(base,"country",["SP.DYN.TFRT.IN"])
+#base_imp_final=simple_imp_grouped(base_imp_final,"country",["SP.DYN.TFRT.IN"])
 
 # Merge
-base_imp_final["SP.DYN.TFRT.IN"] = base_imp_final["SP.DYN.TFRT.IN"].fillna(base_imp_calib["SP.DYN.TFRT.IN"])
-base_imp_final['fert_id'] = base_imp["missing_id"]
-base_imp_final = base_imp_final.rename(columns={"SP.DYN.TFRT.IN": 'fert'})
+#base_imp_final["SP.DYN.TFRT.IN"] = base_imp_final["SP.DYN.TFRT.IN"].fillna(base_imp_calib["SP.DYN.TFRT.IN"])
+#base_imp_final['fert_id'] = base_imp["missing_id"]
+#base_imp_final = base_imp_final.rename(columns={"SP.DYN.TFRT.IN": 'fert'})
 
 # Validate
 #for c in base.country.unique():
@@ -1622,8 +1645,8 @@ base_imp_final = base_imp_final.rename(columns={"SP.DYN.TFRT.IN": 'fert'})
 #    plt.show()
 
 # Merge
-df_econ=pd.merge(left=df_econ,right=base_imp_final[["year","gw_codes","fert",'fert_id']],on=["year","gw_codes"],how="left")
 base = base.rename(columns={"SP.DYN.TFRT.IN": 'fert'})
+df_econ=pd.merge(left=df_econ,right=base[["year","gw_codes","fert"]],on=["year","gw_codes"],how="left")
 
 # W. Life expectancy at birth, female (years) 
 
@@ -1633,20 +1656,20 @@ base=pd.merge(left=base,right=economy[["year","gw_codes","NY.GDP.PCAP.CD","NY.GN
 
 ### Multiple ###
 
-base_imp=imp_opti(base,"country",["SP.DYN.LE00.FE.IN"],vars_add=["SP.DYN.TFRT.IN","SP.POP.GROW","SP.DYN.LE00.MA.IN","SP.DYN.IMRT.IN"],max_iter=10)
+#base_imp=imp_opti(base,"country",["SP.DYN.LE00.FE.IN"],vars_add=["SP.DYN.TFRT.IN","SP.POP.GROW","SP.DYN.LE00.MA.IN","SP.DYN.IMRT.IN"],max_iter=10)
 
 # Calibrate 
-base_imp_calib=calibrate_imp(base_imp, "country","SP.DYN.LE00.FE.IN")
+#base_imp_calib=calibrate_imp(base_imp, "country","SP.DYN.LE00.FE.IN")
 
 ### Simple ###
 
-base_imp_final=linear_imp_grouped(base,"country",["SP.DYN.LE00.FE.IN"])
-base_imp_final=simple_imp_grouped(base_imp_final,"country",["SP.DYN.LE00.FE.IN"])
+#base_imp_final=linear_imp_grouped(base,"country",["SP.DYN.LE00.FE.IN"])
+#base_imp_final=simple_imp_grouped(base_imp_final,"country",["SP.DYN.LE00.FE.IN"])
 
 # Merge
-base_imp_final["SP.DYN.LE00.FE.IN"] = base_imp_final["SP.DYN.LE00.FE.IN"].fillna(base_imp_calib["SP.DYN.LE00.FE.IN"])
-base_imp_final['lifeexp_female_id'] = base_imp["missing_id"]
-base_imp_final = base_imp_final.rename(columns={"SP.DYN.LE00.FE.IN": 'lifeexp_female'})
+#base_imp_final["SP.DYN.LE00.FE.IN"] = base_imp_final["SP.DYN.LE00.FE.IN"].fillna(base_imp_calib["SP.DYN.LE00.FE.IN"])
+#base_imp_final['lifeexp_female_id'] = base_imp["missing_id"]
+#base_imp_final = base_imp_final.rename(columns={"SP.DYN.LE00.FE.IN": 'lifeexp_female'})
 
 # Validate
 #for c in base.country.unique():
@@ -1657,8 +1680,8 @@ base_imp_final = base_imp_final.rename(columns={"SP.DYN.LE00.FE.IN": 'lifeexp_fe
 #    plt.show()
 
 # Merge
-df_econ=pd.merge(left=df_econ,right=base_imp_final[["year","gw_codes","lifeexp_female",'lifeexp_female_id']],on=["year","gw_codes"],how="left")
 base = base.rename(columns={"SP.DYN.LE00.FE.IN": 'lifeexp_female'})
+df_econ=pd.merge(left=df_econ,right=base[["year","gw_codes","lifeexp_female"]],on=["year","gw_codes"],how="left")
 
 # X. Life expectancy at birth, male (years)
 
@@ -1668,20 +1691,20 @@ base=pd.merge(left=base,right=economy[["year","gw_codes","NY.GDP.PCAP.CD","NY.GN
 
 ### Multiple ###
 
-base_imp=imp_opti(base,"country",["SP.DYN.LE00.MA.IN"],vars_add=["SP.DYN.TFRT.IN","SP.POP.GROW","SP.DYN.LE00.FE.IN","SP.DYN.IMRT.IN"],max_iter=10)
+#base_imp=imp_opti(base,"country",["SP.DYN.LE00.MA.IN"],vars_add=["SP.DYN.TFRT.IN","SP.POP.GROW","SP.DYN.LE00.FE.IN","SP.DYN.IMRT.IN"],max_iter=10)
 
 # Calibrate 
-base_imp_calib=calibrate_imp(base_imp, "country","SP.DYN.LE00.MA.IN")
+#base_imp_calib=calibrate_imp(base_imp, "country","SP.DYN.LE00.MA.IN")
 
 ### Simple ###
 
-base_imp_final=linear_imp_grouped(base,"country",["SP.DYN.LE00.MA.IN"])
-base_imp_final=simple_imp_grouped(base_imp_final,"country",["SP.DYN.LE00.MA.IN"])
+#base_imp_final=linear_imp_grouped(base,"country",["SP.DYN.LE00.MA.IN"])
+#base_imp_final=simple_imp_grouped(base_imp_final,"country",["SP.DYN.LE00.MA.IN"])
 
 # Merge
-base_imp_final["SP.DYN.LE00.MA.IN"] = base_imp_final["SP.DYN.LE00.MA.IN"].fillna(base_imp_calib["SP.DYN.LE00.MA.IN"])
-base_imp_final['lifeexp_male_id'] = base_imp["missing_id"]
-base_imp_final = base_imp_final.rename(columns={"SP.DYN.LE00.MA.IN": 'lifeexp_male'})
+#base_imp_final["SP.DYN.LE00.MA.IN"] = base_imp_final["SP.DYN.LE00.MA.IN"].fillna(base_imp_calib["SP.DYN.LE00.MA.IN"])
+#base_imp_final['lifeexp_male_id'] = base_imp["missing_id"]
+#base_imp_final = base_imp_final.rename(columns={"SP.DYN.LE00.MA.IN": 'lifeexp_male'})
 
 # Validate
 #for c in base.country.unique():
@@ -1692,8 +1715,8 @@ base_imp_final = base_imp_final.rename(columns={"SP.DYN.LE00.MA.IN": 'lifeexp_ma
 #    plt.show()
 
 # Merge
-df_econ=pd.merge(left=df_econ,right=base_imp_final[["year","gw_codes","lifeexp_male",'lifeexp_male_id']],on=["year","gw_codes"],how="left")
 base = base.rename(columns={"SP.DYN.LE00.MA.IN": 'lifeexp_male'})
+df_econ=pd.merge(left=df_econ,right=base[["year","gw_codes","lifeexp_male"]],on=["year","gw_codes"],how="left")
 
 # Z. Population growth (annual %) 
 
@@ -1737,20 +1760,20 @@ base=pd.merge(left=base,right=economy[["year","gw_codes","NY.GDP.PCAP.CD","NY.GN
 
 ### Multiple ###
 
-base_imp=imp_opti(base,"country",["SP.DYN.IMRT.IN"],vars_add=["SP.DYN.TFRT.IN","SP.DYN.LE00.FE.IN","SP.DYN.LE00.MA.IN","SP.POP.GROW"],max_iter=10)
+#base_imp=imp_opti(base,"country",["SP.DYN.IMRT.IN"],vars_add=["SP.DYN.TFRT.IN","SP.DYN.LE00.FE.IN","SP.DYN.LE00.MA.IN","SP.POP.GROW"],max_iter=10)
 
 # Calibrate 
-base_imp_calib=calibrate_imp(base_imp, "country","SP.DYN.IMRT.IN")
+#base_imp_calib=calibrate_imp(base_imp, "country","SP.DYN.IMRT.IN")
 
 ### Simple ###
 
-base_imp_final=linear_imp_grouped(base,"country",["SP.DYN.IMRT.IN"])
-base_imp_final=simple_imp_grouped(base_imp_final,"country",["SP.DYN.IMRT.IN"])
+#base_imp_final=linear_imp_grouped(base,"country",["SP.DYN.IMRT.IN"])
+#base_imp_final=simple_imp_grouped(base_imp_final,"country",["SP.DYN.IMRT.IN"])
 
 # Merge
-base_imp_final["SP.DYN.IMRT.IN"] = base_imp_final["SP.DYN.IMRT.IN"].fillna(base_imp_calib["SP.DYN.IMRT.IN"])
-base_imp_final['inf_mort_id'] = base_imp["missing_id"]
-base_imp_final = base_imp_final.rename(columns={"SP.DYN.IMRT.IN": 'inf_mort'})
+#base_imp_final["SP.DYN.IMRT.IN"] = base_imp_final["SP.DYN.IMRT.IN"].fillna(base_imp_calib["SP.DYN.IMRT.IN"])
+#base_imp_final['inf_mort_id'] = base_imp["missing_id"]
+#base_imp_final = base_imp_final.rename(columns={"SP.DYN.IMRT.IN": 'inf_mort'})
 
 # Validate
 #for c in base.country.unique():
@@ -1760,8 +1783,8 @@ base_imp_final = base_imp_final.rename(columns={"SP.DYN.IMRT.IN": 'inf_mort'})
 #    axs[0].set_title(c)
 #    plt.show()
 
-df_econ=pd.merge(left=df_econ,right=base_imp_final[["year","gw_codes","inf_mort","inf_mort_id"]],on=["year","gw_codes"],how="left")
 base = base.rename(columns={"SP.DYN.IMRT.IN": 'inf_mort'})
+df_econ=pd.merge(left=df_econ,right=base[["year","gw_codes","inf_mort"]],on=["year","gw_codes"],how="left")
 
 # J. Net migration 
 
@@ -2259,7 +2282,7 @@ df_econ=pd.merge(left=df_econ,right=base_imp_final[["year","gw_codes","mys_femal
 print(df_econ.isna().any().any())
 print(df_econ.min())
 df_econ.to_csv("out/df_econ_full.csv")  
-df_complete=pd.merge(left=df_complete,right=df_econ[['year','gw_codes','oil_deposits','oil_deposits_id','oil_production','oil_production_id','oil_exports','oil_exports_id','natres_share','natres_share_id','oil_share','oil_share_id','gas_share','gas_share_id','coal_share','coal_share_id','forest_share','forest_share_id','minerals_share','minerals_share_id','gdp','gdp_id','gni','gni_id','gdp_growth','gdp_growth_id','unemploy','unemploy_id','unemploy_male','unemploy_male_id','inflat','inflat_id','conprice','conprice_id','undernour','undernour_id','foodprod','foodprod_id','water_rural','water_rural_id','water_urb','water_urb_id','agri_share','agri_share_id','trade_share','trade_share_id','fert','fert_id','lifeexp_female','lifeexp_female_id','lifeexp_male','lifeexp_male_id','pop_growth','pop_growth_id','inf_mort','inf_mort_id','mig','exports','exports_id','imports','imports_id','primary_female','primary_female_id','primary_male','primary_male_id','second_female','second_female_id','second_male','second_male_id','tert_female','tert_female_id','tert_male','tert_male_id','eys','eys_id','eys_male','eys_male_id','eys_female','eys_female_id','mys','mys_id','mys_male','mys_male_id','mys_female','mys_female_id']],on=["year","gw_codes"],how="left")
+df_complete=pd.merge(left=df_complete,right=df_econ[['year','gw_codes','oil_deposits','oil_deposits_id','oil_production','oil_production_id','oil_exports','oil_exports_id','natres_share','natres_share_id','oil_share','oil_share_id','gas_share','gas_share_id','coal_share','coal_share_id','forest_share','forest_share_id','minerals_share','minerals_share_id','gdp','gdp_id','gni','gni_id','gdp_growth','gdp_growth_id','unemploy','unemploy_id','unemploy_male','unemploy_male_id','inflat','inflat_id','conprice','conprice_id','undernour','undernour_id','foodprod','foodprod_id','water_rural','water_rural_id','water_urb','water_urb_id','agri_share','agri_share_id','trade_share','trade_share_id','fert','lifeexp_female','lifeexp_male','pop_growth','pop_growth_id','inf_mort','mig','exports','exports_id','imports','imports_id','primary_female','primary_female_id','primary_male','primary_male_id','second_female','second_female_id','second_male','second_male_id','tert_female','tert_female_id','tert_male','tert_male_id','eys','eys_id','eys_male','eys_male_id','eys_female','eys_female_id','mys','mys_id','mys_male','mys_male_id','mys_female','mys_female_id']],on=["year","gw_codes"],how="left")
 
 ###############################
 ### Regime and policy theme ###
@@ -2483,12 +2506,16 @@ base_imp_final['regu_id'] = base_imp["missing_id"]
 base_imp_final = base_imp_final.rename(columns={"RQ.EST": 'regu'})
 
 # Validate
-#for c in base.country.unique():
-#    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-#    axs[0].plot(base["year"].loc[base["country"]==c], base["RQ.EST"].loc[base["country"]==c])
-#    axs[1].plot(base_imp_final["year"].loc[base_imp_final["country"]==c], base_imp_final["regu"].loc[base_imp_final["country"]==c])
-#    axs[0].set_title(c)
-#    plt.show()
+for c in base.country.unique():
+    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+    axs[0].plot(base["year"].loc[base["country"]==c], base["RQ.EST"].loc[base["country"]==c],c="black")
+    axs[1].plot(base_imp_final["year"].loc[base_imp_final["country"]==c], base_imp_final["regu"].loc[base_imp_final["country"]==c],c="black")
+    axs[0].set_title(c,size=20)
+    if c=="Ivory Coast":
+        plt.savefig("out/vars.eps",dpi=300,bbox_inches='tight')
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_missin3.eps",dpi=300,bbox_inches='tight')        
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/struc_missin3.eps",dpi=300,bbox_inches='tight')
+    plt.show()
 
 # Merge
 df_pol=pd.merge(left=df_pol,right=base_imp_final[["year","gw_codes","regu",'regu_id']],on=["year","gw_codes"],how="left")
@@ -3083,7 +3110,7 @@ base_imp_final = base_imp_final.rename(columns={"v2smgovshut": 'shutdown'})
 # Merge
 df_pol=pd.merge(left=df_pol,right=base_imp_final[["year","gw_codes","shutdown",'shutdown_id']],on=["year","gw_codes"],how="left")
 
-# B. Government Internet shut down in practice
+# B. Government Internet filtering in practice
 
 # Merge
 vdem=pd.read_csv("data/data_out/vdem_cy.csv",index_col=0)
@@ -3387,12 +3414,16 @@ base_imp_final['co2_id'] = base_imp["missing_id"]
 base_imp_final = base_imp_final.rename(columns={"EN.GHG.CO2.MT.CE.AR5": 'co2'})
 
 # Validate
-#for c in base.country.unique():
-#    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-#    axs[0].plot(base["year"].loc[base["country"]==c], base["EN.GHG.CO2.MT.CE.AR5"].loc[base["country"]==c])
-#    axs[1].plot(base_imp_final["year"].loc[base_imp_final["country"]==c], base_imp_final["co2"].loc[base_imp_final["country"]==c])
-#    axs[0].set_title(c)
-#    plt.show()
+for c in base.country.unique():
+    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+    axs[0].plot(base["year"].loc[base["country"]==c], base["EN.GHG.CO2.MT.CE.AR5"].loc[base["country"]==c],c="black")
+    axs[1].plot(base_imp_final["year"].loc[base_imp_final["country"]==c], base_imp_final["co2"].loc[base_imp_final["country"]==c],c="black")
+    axs[0].set_title(c,size=20)
+    if c=="Serbia":
+        plt.savefig("out/vars.eps",dpi=300,bbox_inches='tight')
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_missin4.eps",dpi=300,bbox_inches='tight')        
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/struc_missin4.eps",dpi=300,bbox_inches='tight')
+    plt.show()
 
 # Merge
 df_geog=pd.merge(left=df_geog,right=base_imp_final[["year","gw_codes","co2",'co2_id']],on=["year","gw_codes"],how="left")
