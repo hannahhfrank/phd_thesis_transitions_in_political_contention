@@ -5,7 +5,7 @@ from sklearn import preprocessing
 from sklearn.inspection import PartialDependenceDisplay, partial_dependence
 import numpy as np
 from scipy.stats import wasserstein_distance
-from sklearn.model_selection import GridSearchCV, PredefinedSplit
+from sklearn.model_selection import GridSearchCV, PredefinedSplit, RandomizedSearchCV
 from sklearn.inspection import PartialDependenceDisplay, partial_dependence
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc, brier_score_loss, mean_squared_error
@@ -30,6 +30,7 @@ import seaborn as sns
 from itertools import combinations
 from sklearn.utils import resample
 from sklearn.svm import SVR
+from joblib import parallel_backend
 
 def preprocess_min_max_group(df, x, group):
     out = pd.DataFrame()
@@ -490,9 +491,10 @@ def multivariate_imp_tree(df, country, vars_input,vars_add=None, max_iter=10,min
         
     df_input = df_MICE.fillna(0)
     df_input_x = df_input.drop(columns=vars_input)
-
-    grid_search = GridSearchCV(estimator=RandomForestRegressor(), param_grid=random_grid, cv=ps, verbose=0, n_jobs=-1)
-    grid_search.fit(df_input_x, df_input[vars_input].values.ravel())
+    with parallel_backend('threading'):
+        grid_search = GridSearchCV(estimator=RandomForestRegressor(), param_grid=random_grid, cv=ps, verbose=0, n_jobs=-1)
+        #grid_search = RandomizedSearchCV(estimator=RandomForestRegressor(), param_distributions=random_grid, cv=ps, verbose=0, n_jobs=-1,n_iter=50)
+        grid_search.fit(df_input_x, df_input[vars_input].values.ravel())
     best_params = grid_search.best_params_
 
     imputer = IterativeImputer(estimator=RandomForestRegressor(**best_params, random_state=0),random_state=1, max_iter=max_iter, min_value=min_val)
@@ -818,8 +820,10 @@ def gen_model(y, x, target, inputs, name, names=None, model_fit=LinearRegression
                 
     if opti_grid is not None:
         ps = PredefinedSplit(test_fold=splits)
-        grid_search = GridSearchCV(estimator=model_fit, param_grid=opti_grid, cv=ps, verbose=0, n_jobs=-1)
-        grid_search.fit(train_x_d, train_y_d.values.ravel())
+        with parallel_backend('threading'):
+            grid_search = GridSearchCV(estimator=model_fit, param_grid=opti_grid, cv=ps, verbose=0, n_jobs=-1)
+            #grid_search = RandomizedSearchCV(estimator=model_fit, param_distributions=opti_grid, cv=ps, verbose=0, n_jobs=-1,n_iter=50)
+            grid_search.fit(train_x_d, train_y_d.values.ravel())
         best_params = grid_search.best_params_
         model_fit.set_params(**best_params)
         model = model_fit
