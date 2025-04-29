@@ -17,6 +17,7 @@ import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 from matplotlib.patches import Rectangle
 import seaborn as sns
+import matplotlib.gridspec as gridspec
 
 import os
 os.environ['PATH'] = "/Library/TeX/texbin:" + os.environ.get('PATH', '')
@@ -27,10 +28,10 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{lmodern}\usepackage[T1]{font
 
 # Simple random forest
 random_grid = {'n_estimators': [int(x) for x in np.linspace(start = 10, stop = 2000, num = 10)],
-               #'max_features': ["sqrt", "log2", None],
-               #'max_depth': [int(x) for x in np.linspace(10, 110, num = 11)]+[None],
-               #'min_samples_split': [2,5,10],
-               #'min_samples_leaf': [1,2,4],
+               'max_features': ["sqrt", "log2", None],
+               'max_depth': [int(x) for x in np.linspace(10, 110, num = 11)]+[None],
+               'min_samples_split': [2,5,10],
+               'min_samples_leaf': [1,2,4],
                }
 
 names={'d_protest_lag1':"t-1 lag of at least one protest event",
@@ -39,9 +40,9 @@ names={'d_protest_lag1':"t-1 lag of at least one protest event",
        'd_riot_lag1':"t-1 lag of at least one riot event",
        "d_riot_zeros_decay":"Time since last riot event",
        "d_neighbors_riot_event_counts_lag1":"One neighbour had one riot event in previous year (t-1 lag)",
-       'd_remote_lag1':"t-1 lag of at least one fatality in remote event",
-       "d_remote_zeros_decay":"Time since last remote fatalities",
-       "d_neighbors_remote_fatalities_lag1":"One neighbour had one fatality from remote in previous year (t-1 lag)",
+       'd_terror_lag1':"t-1 lag of at least one fatality from terrorism",
+       "d_terror_zeros_decay":"Time since last terrorism fatalities",
+       "d_neighbors_terrorism_fatalities_lag1":"One neighbour had one fatality from terrorism in previous year (t-1 lag)",
        'd_sb_lag1':"t-1 lag of at least one fatality in state-based violence",
        "d_sb_zeros_decay":"Time since last state-based violence fatalities",
        "d_neighbors_sb_fatalities_lag1":"One neighbour had one fatality from state-based violence in previous year (t-1 lag)",
@@ -51,7 +52,7 @@ names={'d_protest_lag1':"t-1 lag of at least one protest event",
        'd_osv_lag1':"t-1 lag of at least one fatality in one-sided violence",
        "d_osv_zeros_decay":"Time since last one-sided violence fatalities",
        "d_neighbors_osv_fatalities_lag1":"One neighbour had one fatality from one-sided violence in previous year (t-1 lag)", 
-       "regime_duration":"Years since the country became independent",
+       "regime_duration":"Years since independence",
        'pop_refugee':"Refugee population",
        'pop_refugee_id':"Refugee population (nan imp)",
        "pop":"Population size",
@@ -248,15 +249,20 @@ names={'d_protest_lag1':"t-1 lag of at least one protest event",
        'elections':"Election for leadership taking place in that year",
        'elections_id':"Election for leadership taking place in that year (nan imp)",
        'lastelection':"Time since the last election for leadership",
-       'lastelection_id':"Time since the last election for leadership (nan imp)"
+       'lastelection_id':"Time since the last election for leadership (nan imp)",
+       "d_zeros_decay":"Time since last event/fatality",
+       "d_lag1":"t-1 lag of outcome",
+       "d_neighbors_lag1":"One neighbour had one fatality/event"
        }
 
 
 # Inputs
 demog_theme=['pop','pop_density','pop_density_id','urb_share','rural_share','pop_male_share','pop_male_share_0_14','pop_male_share_15_19','pop_male_share_20_24','pop_male_share_25_29','pop_male_share_30_34','group_counts','group_counts_id','monopoly_share','monopoly_share_id','discriminated_share','discriminated_share_id','powerless_share','powerless_share_id','dominant_share','dominant_share_id','ethnic_frac','ethnic_frac_id','rel_frac','rel_frac_id','lang_frac','lang_frac_id','race_frac','race_frac_id']
 geog_theme=['land','forest','forest_id','temp_norm','temp_id','co2','co2_id','percip','percip_id','waterstress','waterstress_id','agri_land','agri_land_id','arable_land','arable_land_id','rugged','soil','desert','tropical','cont_africa','cont_asia','d_neighbors_con','no_neigh','d_neighbors_non_dem','libdem_id_neigh']
-econ_theme=['oil_deposits','oil_deposits_id','oil_production','oil_production_id','oil_exports','oil_exports_id','natres_share','natres_share_id','oil_share','oil_share_id','gas_share','gas_share_id','coal_share','coal_share_id','forest_share','forest_share_id','minerals_share','minerals_share_id','gdp','gdp_id','gni','gni_id','gdp_growth_norm','gdp_growth_id','unemploy','unemploy_id','unemploy_male','unemploy_male_id','inflat','inflat_id','conprice','conprice_id','undernour','undernour_id','foodprod_norm','foodprod_id','water_rural','water_rural_id','water_urb','water_urb_id','agri_share','agri_share_id','trade_share','trade_share_id','fert','fert_id','lifeexp_female','lifeexp_female_id','lifeexp_male','lifeexp_male_id','pop_growth_norm','pop_growth_id','inf_mort','inf_mort_id','mig_norm','exports','exports_id','imports','imports_id','primary_female','primary_female_id','primary_male','primary_male_id','second_female','second_female_id','second_male','second_male_id','tert_female','tert_female_id','tert_male','tert_male_id','eys','eys_id','eys_male','eys_male_id','eys_female','eys_female_id','mys','mys_id','mys_male','mys_male_id','mys_female','mys_female_id']
+econ_theme=['oil_deposits','oil_deposits_id','oil_production','oil_production_id','oil_exports','oil_exports_id','natres_share','natres_share_id','oil_share','oil_share_id','gas_share','gas_share_id','coal_share','coal_share_id','forest_share','forest_share_id','minerals_share','minerals_share_id','gdp','gdp_id','gni','gni_id','gdp_growth_norm','gdp_growth_id','unemploy','unemploy_id','unemploy_male','unemploy_male_id','inflat','inflat_id','conprice','conprice_id','undernour','undernour_id','foodprod_norm','foodprod_id','water_rural','water_rural_id','water_urb','water_urb_id','agri_share','agri_share_id','trade_share','trade_share_id','fert','lifeexp_female','lifeexp_male','pop_growth_norm','pop_growth_id','inf_mort','mig_norm','exports','exports_id','imports','imports_id','primary_female','primary_female_id','primary_male','primary_male_id','second_female','second_female_id','second_male','second_male_id','tert_female','tert_female_id','tert_male','tert_male_id','eys','eys_id','eys_male','eys_male_id','eys_female','eys_female_id','mys','mys_id','mys_male','mys_male_id','mys_female','mys_female_id']
+#econ_theme=['oil_deposits','oil_deposits_id','oil_production','oil_production_id','oil_exports','oil_exports_id','natres_share','natres_share_id','oil_share','oil_share_id','gas_share','gas_share_id','coal_share','coal_share_id','forest_share','forest_share_id','minerals_share','minerals_share_id','gdp','gdp_id','gni','gni_id','gdp_growth_norm','gdp_growth_id','unemploy','unemploy_id','unemploy_male','unemploy_male_id','inflat','inflat_id','conprice','conprice_id','undernour','undernour_id','foodprod_norm','foodprod_id','water_rural','water_rural_id','water_urb','water_urb_id','trade_share','trade_share_id','fert','lifeexp_female','lifeexp_male','pop_growth_norm','pop_growth_id','inf_mort','exports','exports_id','imports','imports_id','primary_female','primary_female_id','primary_male','primary_male_id','second_female','second_female_id','second_male','second_male_id','tert_female','tert_female_id','tert_male','tert_male_id','mys','mys_id','mys_male','mys_male_id','mys_female','mys_female_id']
 pol_theme=['armedforces_share','armedforces_share_id','milex_share','milex_share_id','corruption','corruption_id', 'effectiveness', 'effectiveness_id', 'polvio','polvio_id','regu','regu_id','law','law_id','account','account_id','tax','tax_id','broadband','broadband_id','telephone','telephone_id','internet_use','internet_use_id','mobile','mobile_id','polyarchy','libdem','libdem_id','partipdem','delibdem','egaldem','civlib','phyvio','pollib','privlib','execon','execon_id','exgender','exgender_id','exgeo','exgeo_id','expol','expol_id','exsoc','exsoc_id','shutdown','shutdown_id','filter','filter_id','tenure_months','tenure_months_id','dem_duration','dem_duration_id','elections','elections_id','lastelection','lastelection_id']
+#pol_theme=['armedforces_share','armedforces_share_id','milex_share','milex_share_id','corruption','corruption_id', 'effectiveness', 'effectiveness_id','regu','regu_id','law','law_id','account','account_id','tax','tax_id','broadband','broadband_id','telephone','telephone_id','internet_use','internet_use_id','mobile','mobile_id','polyarchy','libdem','libdem_id','partipdem','delibdem','egaldem','civlib','pollib','privlib','execon','execon_id','exgender','exgender_id','exgeo','exgeo_id','expol','expol_id','exsoc','exsoc_id','shutdown','shutdown_id','filter','filter_id','tenure_months','tenure_months_id','dem_duration','dem_duration_id','elections','elections_id','lastelection','lastelection_id']
 
 # Check downsampling
 y=pd.read_csv("out/df_out_full.csv",index_col=0)
@@ -265,7 +271,7 @@ y["d_civil_war"].hist()
 fig,ax = plt.subplots()
 y["d_civil_conflict"].hist()
 fig,ax = plt.subplots()
-y["d_remote"].hist()
+y["d_terror"].hist()
 fig,ax = plt.subplots()
 y["d_sb"].hist()
 fig,ax = plt.subplots()
@@ -279,7 +285,7 @@ y["d_riot"].hist()
 
 # Check distributions
 x=pd.read_csv("out/df_conf_hist_full.csv",index_col=0)
-for var in ['d_civil_war_lag1','d_civil_war_lag1',"d_civil_war_zeros_decay","d_neighbors_civil_war_lag1",'d_civil_conflict_lag1',"d_civil_conflict_zeros_decay","d_neighbors_civil_conflict_lag1",'d_protest_lag1',"d_protest_zeros_decay","d_neighbors_proteset_event_counts_lag1",'d_riot_lag1',"d_riot_zeros_decay","d_neighbors_riot_event_counts_lag1",'d_remote_lag1',"d_remote_zeros_decay","d_neighbors_remote_fatalities_lag1",'d_sb_lag1',"d_sb_zeros_decay","d_neighbors_sb_fatalities_lag1",'d_ns_lag1',"d_ns_zeros_decay","d_neighbors_ns_fatalities_lag1",'d_osv_lag1',"d_osv_zeros_decay","d_neighbors_osv_fatalities_lag1","regime_duration",'pop_refugee','pop_refugee_id']:
+for var in ['d_civil_war_lag1','d_civil_war_lag1',"d_civil_war_zeros_decay","d_neighbors_civil_war_lag1",'d_civil_conflict_lag1',"d_civil_conflict_zeros_decay","d_neighbors_civil_conflict_lag1",'d_protest_lag1',"d_protest_zeros_decay","d_neighbors_proteset_event_counts_lag1",'d_riot_lag1',"d_riot_zeros_decay","d_neighbors_riot_event_counts_lag1",'d_terror_lag1',"d_terror_zeros_decay","d_neighbors_terrorism_fatalities_lag1",'d_sb_lag1',"d_sb_zeros_decay","d_neighbors_sb_fatalities_lag1",'d_ns_lag1',"d_ns_zeros_decay","d_neighbors_ns_fatalities_lag1",'d_osv_lag1',"d_osv_zeros_decay","d_neighbors_osv_fatalities_lag1","regime_duration",'pop_refugee','pop_refugee_id']:
     fig,ax = plt.subplots()
     x[var].hist()
     plt.title(var)
@@ -346,6 +352,7 @@ x["pop_refugee"]=np.log(x["pop_refugee"]+1)
 # Categorical
 target="d_civil_war"
 inputs=['d_civil_war_lag1',"d_civil_war_zeros_decay","d_neighbors_civil_war_lag1","regime_duration",'pop_refugee','pop_refugee_id']
+#inputs=['d_civil_war_lag1',"d_civil_war_zeros_decay","d_neighbors_civil_war_lag1",]
 history_war_df,history_war_evals,history_war_val=gen_model(y,x,target,inputs,names=names,name="history_war",model_fit=RandomForestClassifier(random_state=0),opti_grid=random_grid,outcome="categorical",int_methods=False,downsampling=False)
 history_war_df.to_csv("out/history_war_df.csv")
 history_war_evals_df = pd.DataFrame.from_dict(history_war_evals, orient='index').reset_index()
@@ -453,6 +460,7 @@ ensemble = (history_war_df.preds_proba*weights_war_n[0])+(demog_war_df.preds_pro
 ensemble_war=pd.concat([history_war_df[["country","year","d_civil_war","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_war.columns=["country","year","d_civil_war","test","preds_proba"]
 ensemble_war=ensemble_war.reset_index(drop=True)
+ensemble_war.to_csv("out/ensemble_war.csv")
 
 # Evals
 brier = brier_score_loss(ensemble_war.loc[ensemble_war["test"]==1].d_civil_war, ensemble_war.loc[ensemble_war["test"]==1].preds_proba)
@@ -528,6 +536,7 @@ x["pop_refugee"]=np.log(x["pop_refugee"]+1)
 # Categorical
 target="d_civil_conflict"
 inputs=['d_civil_conflict_lag1',"d_civil_conflict_zeros_decay","d_neighbors_civil_conflict_lag1","regime_duration",'pop_refugee','pop_refugee_id']
+#inputs=['d_civil_conflict_lag1',"d_civil_conflict_zeros_decay","d_neighbors_civil_conflict_lag1"]
 history_conflict_df,history_conflict_evals,history_conflict_val=gen_model(y,x,target,inputs,names=names,name="history_conflict",model_fit=RandomForestClassifier(random_state=0),opti_grid=random_grid,outcome="categorical",int_methods=False)
 history_conflict_df.to_csv("out/history_conflict_df.csv")
 history_conflict_evals_df = pd.DataFrame.from_dict(history_conflict_evals, orient='index').reset_index()
@@ -635,6 +644,7 @@ ensemble = (history_conflict_df.preds_proba*weights_conflict_n[0])+(demog_confli
 ensemble_conflict=pd.concat([history_conflict_df[["country","year","d_civil_conflict","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_conflict.columns=["country","year","d_civil_conflict","test","preds_proba"]
 ensemble_conflict=ensemble_conflict.reset_index(drop=True)
+ensemble_conflict.to_csv("out/ensemble_conflict.csv")
 
 # Evals
 brier = brier_score_loss(ensemble_conflict.loc[ensemble_conflict["test"]==1].d_civil_conflict, ensemble_conflict.loc[ensemble_conflict["test"]==1].preds_proba)
@@ -755,6 +765,7 @@ x["pop_refugee"]=np.log(x["pop_refugee"]+1)
 # Categorical
 target="d_protest"
 inputs=['d_protest_lag1',"d_protest_zeros_decay","d_neighbors_proteset_event_counts_lag1","regime_duration",'pop_refugee','pop_refugee_id']
+#inputs=['d_protest_lag1',"d_protest_zeros_decay","d_neighbors_proteset_event_counts_lag1"]
 history_protest_df,history_protest_evals,history_protest_val,history_protest_shap=gen_model(y,x,target,inputs,names=names,name="history_protest",model_fit=RandomForestClassifier(random_state=0),opti_grid=random_grid,outcome="categorical",int_methods=True,inputs_plot=['d_protest_lag1',"d_protest_zeros_decay","d_neighbors_proteset_event_counts_lag1","regime_duration",'pop_refugee'])
 history_protest_df.to_csv("out/history_protest_df.csv")
 history_protest_evals_df = pd.DataFrame.from_dict(history_protest_evals, orient='index').reset_index()
@@ -874,6 +885,7 @@ ensemble = (history_protest_df.preds_proba*weights_protest_n[0])+(demog_protest_
 ensemble_protest=pd.concat([history_protest_df[["country","year","d_protest","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_protest.columns=["country","year","d_protest","test","preds_proba"]
 ensemble_protest=ensemble_protest.reset_index(drop=True)
+ensemble_protest.to_csv("out/ensemble_protest.csv")
 
 # Evals
 brier = brier_score_loss(ensemble_protest.loc[ensemble_protest["test"]==1].d_protest, ensemble_protest.loc[ensemble_protest["test"]==1].preds_proba)
@@ -920,7 +932,47 @@ print(f"{round(evals_protest_ensemble['aupr'],5)} &  \\\
                                     #############
                                     ### Riots ###
                                     #############
-
+                                    
+# List of microstates: 
+exclude={"Dominica":54,
+         "Grenada":55,
+         "Saint Lucia":56,
+         "Saint Vincent and the Grenadines":57,
+         "Antigua & Barbuda":58,
+         "Saint Kitts and Nevis":60,
+         "Monaco":221,
+         "Liechtenstein":223,
+         "San Marino":331,
+         "Andorra":232,
+         "Abkhazia":396,
+         "South Ossetia":397,
+         "São Tomé and Principe":403,
+         "Seychelles":591,
+         "Vanuatu":935,
+         "Kiribati":970,
+         "Nauru":971,
+         "Tonga":972,
+         "Tuvalu":973,
+         "Marshall Islands":983,
+         "Palau":986,
+         "Micronesia":987,
+         "Samoa":990,
+         "German Democratic Republic":265,
+         "Czechoslovakia":315,
+         "Yugoslavia":345,
+         "Abkhazia":396,
+         "South Ossetia":397,
+         "Yemen, People's Republic of":680,
+         "Taiwan":713, 
+         "Bahamas":31,
+         "Belize":80,
+         "Brunei Darussalam":835, 
+         "Kosovo":347, 
+         "Democratic Peoples Republic of Korea":731}                       
+                                
+base=pd.read_csv("data/data_out/acled_cy_protest.csv",index_col=0)
+base = base[["year","gw_codes"]][~base['gw_codes'].isin(list(exclude.values()))]
+                                                                        
 ###################
 ### A. Baseline ###
 ###################
@@ -955,6 +1007,7 @@ x["pop_refugee"]=np.log(x["pop_refugee"]+1)
 # Categorical
 target="d_riot"
 inputs=['d_riot_lag1',"d_riot_zeros_decay","d_neighbors_riot_event_counts_lag1",'regime_duration', 'pop_refugee', 'pop_refugee_id']
+#inputs=['d_riot_lag1',"d_riot_zeros_decay","d_neighbors_riot_event_counts_lag1"]
 history_riot_df,history_riot_evals,history_riot_val,history_riot_shap=gen_model(y,x,target,inputs,names=names,name="history_riot",model_fit=RandomForestClassifier(random_state=0),opti_grid=random_grid,outcome="categorical",int_methods=True,inputs_plot=['d_riot_lag1',"d_riot_zeros_decay","d_neighbors_riot_event_counts_lag1","regime_duration",'pop_refugee'],downsampling=False)
 history_riot_df.to_csv("out/history_riot_df.csv")
 history_riot_evals_df = pd.DataFrame.from_dict(history_riot_evals, orient='index').reset_index()
@@ -1074,6 +1127,7 @@ ensemble = (history_riot_df.preds_proba*weights_riot_n[0])+(demog_riot_df.preds_
 ensemble_riot=pd.concat([history_riot_df[["country","year","d_riot","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_riot.columns=["country","year","d_riot","test","preds_proba"]
 ensemble_riot=ensemble_riot.reset_index(drop=True)
+ensemble_riot.to_csv("out/ensemble_riot.csv")
 
 # Evals
 brier = brier_score_loss(ensemble_riot.loc[ensemble_riot["test"]==1].d_riot, ensemble_riot.loc[ensemble_riot["test"]==1].preds_proba)
@@ -1116,9 +1170,9 @@ print(f"{round(evals_riot_ensemble['aupr'],5)} &  \\\
        {round(evals_riot_ensemble['auroc'],5)} &  \\\
        {round(evals_riot_ensemble['brier'],5)}")  
       
-                                ##############
-                                ### Remote ###
-                                ##############
+                                #################
+                                ### Terrorism ###
+                                #################
 
 ###################
 ### A. Baseline ###
@@ -1127,12 +1181,15 @@ print(f"{round(evals_riot_ensemble['aupr'],5)} &  \\\
 # Load dataset
 y=pd.read_csv("out/df_out_full.csv",index_col=0)
 x=pd.read_csv("out/df_conf_hist_full.csv",index_col=0)
-y=pd.merge(left=base,right=y,on=["year","gw_codes"],how="left")
-x=pd.merge(left=base,right=x,on=["year","gw_codes"],how="left")
+y=y.loc[y["year"]<2021]
+x=x.loc[x["year"]<2021]
+
+# Transforms
+x["pop_refugee"]=np.log(x["pop_refugee"]+1)
 
 # Categorical
-target="d_remote"
-inputs=['d_remote_lag1']
+target="d_terror"
+inputs=['d_terror_lag1']
 base_terror_df,base_terror_evals,base_terror_val=gen_model(y,x,target,inputs,names=names,name="base_terror",model_fit=DummyClassifier(strategy="most_frequent"),outcome="categorical",int_methods=False)
 base_terror_df.to_csv("out/base_terror_df.csv")
 base_terror_evals_df = pd.DataFrame.from_dict(base_terror_evals, orient='index').reset_index()
@@ -1145,16 +1202,13 @@ base_terror_evals_df.to_csv("out/base_terror_evals_df.csv")
 # Load dataset
 y=pd.read_csv("out/df_out_full.csv",index_col=0)
 x=pd.read_csv("out/df_conf_hist_full.csv",index_col=0)
-y=pd.merge(left=base,right=y,on=["year","gw_codes"],how="left")
-x=pd.merge(left=base,right=x,on=["year","gw_codes"],how="left")
-
-# Transforms
-x["pop_refugee"]=np.log(x["pop_refugee"]+1)
+y=y.loc[y["year"]<2021]
+x=x.loc[x["year"]<2021]
 
 # Categorical
-target="d_remote"
-inputs=['d_remote_lag1',"d_remote_zeros_decay","d_neighbors_remote_fatalities_lag1",'regime_duration','pop_refugee','pop_refugee_id']
-history_terror_df,history_terror_evals,history_terror_val,history_terror_shap=gen_model(y,x,target,inputs,names=names,name="history_terror",model_fit=RandomForestClassifier(random_state=0),opti_grid=random_grid,outcome="categorical",int_methods=True,inputs_plot=['d_terror_lag1',"d_terror_zeros_decay","d_neighbors_terror_event_counts_lag1","regime_duration",'pop_refugee'])
+target="d_terror"
+inputs=['d_terror_lag1',"d_terror_zeros_decay","d_neighbors_terrorism_fatalities_lag1",'regime_duration','pop_refugee','pop_refugee_id']
+history_terror_df,history_terror_evals,history_terror_val,history_terror_shap=gen_model(y,x,target,inputs,names=names,name="history_terror",model_fit=RandomForestClassifier(random_state=0),opti_grid=random_grid,outcome="categorical",int_methods=True,inputs_plot=['d_terror_lag1',"d_terror_zeros_decay","d_neighbors_terrorism_event_counts_lag1","regime_duration",'pop_refugee'])
 history_terror_df.to_csv("out/history_terror_df.csv")
 history_terror_evals_df = pd.DataFrame.from_dict(history_terror_evals, orient='index').reset_index()
 history_terror_evals_df.to_csv("out/history_terror_evals_df.csv")
@@ -1167,14 +1221,14 @@ pd.DataFrame(history_terror_shap[:,:,1]).to_csv("out/history_terror_shap.csv")
 # Load dataset
 y=pd.read_csv("out/df_out_full.csv",index_col=0)
 x=pd.read_csv("out/df_demog_full.csv",index_col=0)
-y=pd.merge(left=base,right=y,on=["year","gw_codes"],how="left")
-x=pd.merge(left=base,right=x,on=["year","gw_codes"],how="left")
+y=y.loc[y["year"]<2021]
+x=x.loc[x["year"]<2021]
 
 # Transforms
 x["pop"]=np.log(x["pop"]+1)
 
 # Categorical
-target="d_remote"
+target="d_terror"
 inputs=demog_theme
 demog_terror_df,demog_terror_evals,demog_terror_val,demog_terror_shap=gen_model(y,x,target,inputs,names=names,name="demog_terror",model_fit=RandomForestClassifier(random_state=0),opti_grid=random_grid,outcome="categorical",int_methods=True,inputs_plot=['pop','pop_density','urb_share','rural_share','pop_male_share','pop_male_share_0_14','pop_male_share_15_19','pop_male_share_20_24','pop_male_share_25_29','pop_male_share_30_34','group_counts','monopoly_share','discriminated_share','powerless_share','dominant_share','ethnic_frac','rel_frac','lang_frac','race_frac'])
 demog_terror_df.to_csv("out/demog_terror_df.csv")
@@ -1189,8 +1243,8 @@ pd.DataFrame(demog_terror_shap[:,:,1]).to_csv("out/demog_terror_shap.csv")
 # Load dataset
 y=pd.read_csv("out/df_out_full.csv",index_col=0)
 x=pd.read_csv("out/df_geog_full.csv",index_col=0)
-y=pd.merge(left=base,right=y,on=["year","gw_codes"],how="left")
-x=pd.merge(left=base,right=x,on=["year","gw_codes"],how="left")
+y=y.loc[y["year"]<2021]
+x=x.loc[x["year"]<2021]
 
 # Transforms
 x["land"]=np.log(x["land"]+1)
@@ -1199,7 +1253,7 @@ x["waterstress"]=np.log(x["waterstress"]+1)
 preprocess_min_max_group(x,"temp","country")
 
 # Categorical
-target="d_remote"
+target="d_terror"
 inputs=geog_theme
 geog_terror_df,geog_terror_evals,geog_terror_val,geog_terror_shap=gen_model(y,x,target,inputs,names=names,name="geog_terror",model_fit=RandomForestClassifier(random_state=0),opti_grid=random_grid,outcome="categorical",int_methods=True,inputs_plot=["land","temp","forest","co2","percip","waterstress","agri_land","arable_land","rugged","soil","desert","tropical","cont_africa","cont_asia","d_neighbors_con","no_neigh","d_neighbors_non_dem"])
 geog_terror_df.to_csv("out/geog_terror_df.csv")
@@ -1214,8 +1268,8 @@ pd.DataFrame(geog_terror_shap[:,:,1]).to_csv("out/geog_terror_shap.csv")
 # Load dataset
 y=pd.read_csv("out/df_out_full.csv",index_col=0)
 x=pd.read_csv("out/df_econ_full.csv",index_col=0)
-y=pd.merge(left=base,right=y,on=["year","gw_codes"],how="left")
-x=pd.merge(left=base,right=x,on=["year","gw_codes"],how="left")
+y=y.loc[y["year"]<2021]
+x=x.loc[x["year"]<2021]
 
 # Transforms
 x["oil_deposits"]=np.log(x["oil_deposits"]+1)
@@ -1230,7 +1284,7 @@ preprocess_min_max_group(x,"pop_growth","country")
 preprocess_min_max_group(x,"mig","country")
 
 # Categorical
-target="d_remote"
+target="d_terror"
 inputs=econ_theme
 econ_terror_df,econ_terror_evals,econ_terror_val,econ_terror_shap=gen_model(y,x,target,inputs,names=names,name="econ_terror",model_fit=RandomForestClassifier(random_state=0),opti_grid=random_grid,outcome="categorical",int_methods=True,inputs_plot=["oil_deposits","oil_production","oil_exports","natres_share","gdp","gni","gdp_growth_norm","unemploy","unemploy_male","inflat","conprice","undernour","foodprod_norm","water_rural","water_urb","agri_share","trade_share","fert","lifeexp_female","lifeexp_male","pop_growth_norm","inf_mort","mig_norm","broadband","telephone","internet_use","mobile"])
 econ_terror_df.to_csv("out/econ_terror_df.csv")
@@ -1245,14 +1299,14 @@ pd.DataFrame(econ_terror_shap[:,:,1]).to_csv("out/econ_terror_shap.csv")
 # Load dataset
 y=pd.read_csv("out/df_out_full.csv",index_col=0)
 x=pd.read_csv("out/df_pol_full.csv",index_col=0)
-y=pd.merge(left=base,right=y,on=["year","gw_codes"],how="left")
-x=pd.merge(left=base,right=x,on=["year","gw_codes"],how="left")
+y=y.loc[y["year"]<2021]
+x=x.loc[x["year"]<2021]
 
 # Transforms
 x["milex_share"]=np.log(x["milex_share"]+1)
 
 # Categorical
-target="d_remote"
+target="d_terror"
 inputs=pol_theme
 pol_terror_df,pol_terror_evals,pol_terror_val,pol_terror_shap=gen_model(y,x,target,inputs,names=names,name="pol_terror",model_fit=RandomForestClassifier(random_state=0),opti_grid=random_grid,outcome="categorical",int_methods=True,inputs_plot=["eys","eys_male","eys_female","mys","mys_female","mys_male","armedforces_share","milex_share","corruption","effectiveness","polvio","regu","law","account","tax","polyarchy","libdem","partipdem","delibdem","egaldem","civlib","phyvio","pollib","privlib","execon","exgender","exgeo","expol","exsoc","shutdown","filter","tenure_months","dem_duration","elections","lastelection"])
 pol_terror_df.to_csv("out/pol_terror_df.csv")
@@ -1266,13 +1320,14 @@ pd.DataFrame(pol_terror_shap[:,:,1]).to_csv("out/pol_terror_shap.csv")
 
 # Calculate weighted average
 predictions=pd.concat([history_terror_df.preds_proba,demog_terror_df.preds_proba,geog_terror_df.preds_proba,econ_terror_df.preds_proba,pol_terror_df.preds_proba], axis=1)
-weights=[1-history_terror_val["brier"],1-demog_terror_val["brier"],1-geog_terror_val["brier"],1-econ_terror_val["brier"],1-pol_terror_val["brier"]]
+weights=[1-history_terror_evals["brier"],1-demog_terror_evals["brier"],1-geog_terror_evals["brier"],1-econ_terror_evals["brier"],1-pol_terror_evals["brier"]]
 weights_terror_n = [(x - min(weights)) / (max(weights) - min(weights)) for x in weights]
 weights_terror_n = [x / sum(weights_terror_n) for x in weights_terror_n]
 ensemble = (history_terror_df.preds_proba*weights_terror_n[0])+(demog_terror_df.preds_proba*weights_terror_n[1])+(geog_terror_df.preds_proba*weights_terror_n[2])+(econ_terror_df.preds_proba*weights_terror_n[3])+(pol_terror_df.preds_proba*weights_terror_n[4])
-ensemble_terror=pd.concat([history_terror_df[["country","year","d_remote","test"]],pd.DataFrame(ensemble)],axis=1)
+ensemble_terror=pd.concat([history_terror_df[["country","year","d_terror","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_terror.columns=["country","year","d_terror","test","preds_proba"]
 ensemble_terror=ensemble_terror.reset_index(drop=True)
+ensemble_terror.to_csv("out/ensemble_terror.csv")
 
 # Evals
 brier = brier_score_loss(ensemble_terror.loc[ensemble_terror["test"]==1].d_terror, ensemble_terror.loc[ensemble_terror["test"]==1].preds_proba)
@@ -1281,6 +1336,7 @@ aupr = auc(recall, precision)
 auroc = roc_auc_score(ensemble_terror.loc[ensemble_terror["test"]==1].d_terror, ensemble_terror.loc[ensemble_terror["test"]==1].preds_proba)
 evals_terror_ensemble = {"brier": brier, "aupr": aupr, "auroc": auroc}
 evals_terror_ensemble_df = pd.DataFrame.from_dict(evals_terror_ensemble, orient='index').reset_index()
+evals_terror_ensemble_df.to_csv("out/evals_terror_ensemble_df.csv")
 evals_terror_ensemble_df.to_csv("out/evals_terror_ensemble_df.csv")
 
 ###################
@@ -1349,6 +1405,7 @@ x["pop_refugee"]=np.log(x["pop_refugee"]+1)
 # Categorical
 target="d_sb"
 inputs=['d_sb_lag1',"d_sb_zeros_decay","d_neighbors_sb_fatalities_lag1",'regime_duration', 'pop_refugee', 'pop_refugee_id']
+#inputs=['d_sb_lag1',"d_sb_zeros_decay","d_neighbors_sb_fatalities_lag1"]
 history_sb_df,history_sb_evals,history_sb_val,history_sb_shap=gen_model(y,x,target,inputs,names=names,name="history_sb",model_fit=RandomForestClassifier(random_state=0),opti_grid=random_grid,outcome="categorical",int_methods=True,inputs_plot=['d_sb_lag1',"d_sb_zeros_decay","d_neighbors_sb_event_counts_lag1","regime_duration",'pop_refugee'])
 history_sb_df.to_csv("out/history_sb_df.csv")
 history_sb_evals_df = pd.DataFrame.from_dict(history_sb_evals, orient='index').reset_index()
@@ -1460,6 +1517,7 @@ ensemble = (history_sb_df.preds_proba*weights_sb_n[0])+(demog_sb_df.preds_proba*
 ensemble_sb=pd.concat([history_sb_df[["country","year","d_sb","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_sb.columns=["country","year","d_sb","test","preds_proba"]
 ensemble_sb=ensemble_sb.reset_index(drop=True)
+ensemble_sb.to_csv("out/ensemble_sb.csv")
 
 # Evals
 brier = brier_score_loss(ensemble_sb.loc[ensemble_sb["test"]==1].d_sb, ensemble_sb.loc[ensemble_sb["test"]==1].preds_proba)
@@ -1536,6 +1594,7 @@ x["pop_refugee"]=np.log(x["pop_refugee"]+1)
 # Categorical
 target="d_osv"
 inputs=['d_osv_lag1',"d_osv_zeros_decay","d_neighbors_osv_fatalities_lag1",'regime_duration','pop_refugee','pop_refugee_id']
+#inputs=['d_osv_lag1',"d_osv_zeros_decay","d_neighbors_osv_fatalities_lag1",'regime_duration']
 history_osv_df,history_osv_evals,history_osv_val,history_osv_shap=gen_model(y,x,target,inputs,names=names,name="history_osv",model_fit=RandomForestClassifier(random_state=0),opti_grid=random_grid,outcome="categorical",int_methods=True,inputs_plot=['d_osv_lag1',"d_osv_zeros_decay","d_neighbors_osv_event_counts_lag1","regime_duration",'pop_refugee'])
 history_osv_df.to_csv("out/history_osv_df.csv")
 history_osv_evals_df = pd.DataFrame.from_dict(history_osv_evals, orient='index').reset_index()
@@ -1647,6 +1706,7 @@ ensemble = (history_osv_df.preds_proba*weights_osv_n[0])+(demog_osv_df.preds_pro
 ensemble_osv=pd.concat([history_osv_df[["country","year","d_osv","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_osv.columns=["country","year","d_osv","test","preds_proba"]
 ensemble_osv=ensemble_osv.reset_index(drop=True)
+ensemble_osv.to_csv("out/ensemble_osv.csv")
 
 # Evals
 brier = brier_score_loss(ensemble_osv.loc[ensemble_osv["test"]==1].d_osv, ensemble_osv.loc[ensemble_osv["test"]==1].preds_proba)
@@ -1723,6 +1783,7 @@ x["pop_refugee"]=np.log(x["pop_refugee"]+1)
 # Categorical
 target="d_ns"
 inputs=['d_ns_lag1',"d_ns_zeros_decay","d_neighbors_ns_fatalities_lag1",'regime_duration', 'pop_refugee', 'pop_refugee_id']
+#inputs=['d_ns_lag1',"d_ns_zeros_decay","d_neighbors_ns_fatalities_lag1"]
 history_ns_df,history_ns_evals,history_ns_val,history_ns_shap=gen_model(y,x,target,inputs,names=names,name="history_ns",model_fit=RandomForestClassifier(random_state=0),opti_grid=random_grid,outcome="categorical",int_methods=True,inputs_plot=['d_ns_lag1',"d_ns_zeros_decay","d_neighbors_ns_fatalities_lag1","regime_duration",'pop_refugee'],downsampling=False)
 history_ns_df.to_csv("out/history_ns_df.csv")
 history_ns_evals_df = pd.DataFrame.from_dict(history_ns_evals, orient='index').reset_index()
@@ -1834,6 +1895,7 @@ ensemble = (history_ns_df.preds_proba*weights_ns_n[0])+(demog_ns_df.preds_proba*
 ensemble_ns=pd.concat([history_ns_df[["country","year","d_ns","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_ns.columns=["country","year","d_ns","test","preds_proba"]
 ensemble_ns=ensemble_ns.reset_index(drop=True)
+ensemble_ns.to_csv("out/ensemble_ns.csv")
 
 # Evals
 brier = brier_score_loss(ensemble_ns.loc[ensemble_ns["test"]==1].d_ns, ensemble_ns.loc[ensemble_ns["test"]==1].preds_proba)
@@ -1903,19 +1965,31 @@ weights_n = [x / sum(weights_n) for x in weights_n]
 ### Protest, riotes, terrorism, sb, ns, osv ###
 
 base=ensemble_protest[["year","country"]]
+base=base.loc[base["year"]<2021]
 ensemble_sb_short=pd.merge(base, ensemble_sb,on=["year","country"],how="left")
 
 base=ensemble_protest[["year","country"]]
+base=base.loc[base["year"]<2021]
 ensemble_ns_short=pd.merge(base, ensemble_ns,on=["year","country"],how="left")
 
 base=ensemble_protest[["year","country"]]
+base=base.loc[base["year"]<2021]
 ensemble_osv_short=pd.merge(base, ensemble_osv,on=["year","country"],how="left")
 
-ensemble = (ensemble_protest.preds_proba*weights_n[0])+(ensemble_riot.preds_proba*weights_n[1])+(ensemble_terror.preds_proba*weights_n[2])+(ensemble_sb_short.preds_proba*weights_n[3])+(ensemble_ns_short.preds_proba*weights_n[4])+(ensemble_osv_short.preds_proba*weights_n[5])
-ensemble_ens=pd.concat([ensemble_protest[["country","year"]],pd.DataFrame(ensemble)],axis=1)
+base=ensemble_protest[["year","country"]]
+base=base.loc[base["year"]<2021]
+ensemble_terror_short=pd.merge(base, ensemble_terror,on=["year","country"],how="left")
+
+ensemble_protest_s=ensemble_protest.loc[ensemble_protest["year"]<2021]
+ensemble_protest_s=ensemble_protest_s.reset_index(drop=True)
+ensemble_riot_s=ensemble_riot.loc[ensemble_riot["year"]<2021]
+ensemble_riot_s=ensemble_riot_s.reset_index(drop=True)
+
+ensemble = (ensemble_protest_s.preds_proba*weights_n[0])+(ensemble_riot_s.preds_proba*weights_n[1])+(ensemble_terror_short.preds_proba*weights_n[2])+(ensemble_sb_short.preds_proba*weights_n[3])+(ensemble_ns_short.preds_proba*weights_n[4])+(ensemble_osv_short.preds_proba*weights_n[5])
+ensemble_ens=pd.concat([ensemble_protest_s[["country","year"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_ens.columns=["country","year","preds_proba"]
 
-### sb, ns, osv  ###
+### sb, ns, osv, terrorism  ###
 base=ensemble_protest[["year","country"]]
 base["drop"] = base['year'].astype(str) + '-' + base['country']
 drop=list(base["drop"])
@@ -1939,1572 +2013,35 @@ ensemble_ens_vio.columns=["country","year","preds_proba"]
 ensemble_ens=pd.concat([ensemble_ens,ensemble_ens_vio],axis=0)
 ensemble_ens=ensemble_ens.sort_values(by=["country","year"])
 
-#######################
-### Prediction maps ###
-#######################
-y=pd.read_csv("out/df_out_full.csv",index_col=0)
+### Year 2021-2023 sb, ns, osv, protest, riots ###
 
-for year in list(y.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(y[["country","d_sb"]].loc[y["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="d_sb",ax=ax,cmap="Greys",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"At least one fatality from civil conflict, {year}", size=25)
-    #cmap = plt.cm.get_cmap('Greys')
-    #divider = make_axes_locatable(ax)
-    #cax = divider.append_axes("right", size="2%", pad=0.01)   
-    #fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_actuals_sb_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_actuals_sb_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"out/struc_actuals_sb_{year}.jpeg",dpi=400,bbox_inches="tight")
+base=ensemble_protest[["year","country"]]
+base=base.loc[base["year"]<=2021]
+ensemble_sb_short=pd.merge(base, ensemble_sb,on=["year","country"],how="left")
 
-for year in list(y.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(y[["country","d_ns"]].loc[y["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="d_ns",ax=ax,cmap="Greys",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"At least one fatality from non-state conflict, {year}", size=25)
-    #cmap = plt.cm.get_cmap('Greys')
-    #divider = make_axes_locatable(ax)
-    #cax = divider.append_axes("right", size="2%", pad=0.01)   
-    #fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_actuals_ns_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_actuals_ns_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"out/struc_actuals_ns_{year}.jpeg",dpi=400,bbox_inches="tight")
+base=ensemble_protest[["year","country"]]
+base=base.loc[base["year"]<=2021]
+ensemble_ns_short=pd.merge(base, ensemble_ns,on=["year","country"],how="left")
 
-for year in list(y.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(y[["country","d_osv"]].loc[y["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="d_osv",ax=ax,cmap="Greys",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"At least one fatality from one-sided violence, {year}", size=25)
-    #cmap = plt.cm.get_cmap('Greys')
-    #divider = make_axes_locatable(ax)
-    #cax = divider.append_axes("right", size="2%", pad=0.01)   
-    #fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_actuals_osv_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_actuals_osv_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"out/struc_actuals_osv_{year}.jpeg",dpi=400,bbox_inches="tight")
-                
-for year in list(y.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(y[["country","d_protest"]].loc[y["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="d_protest",ax=ax,cmap="Greys",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"At least 25 protest events, {year}", size=25)
-    #cmap = plt.cm.get_cmap('Blues')
-    #divider = make_axes_locatable(ax)
-    #cax = divider.append_axes("right", size="2%", pad=0.01)   
-    #fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_actuals_protest_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_actuals_protest_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"out/struc_actuals_protest_{year}.jpeg",dpi=400,bbox_inches="tight")
-     
-for year in list(y.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(y[["country","d_riot"]].loc[y["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="d_riot",ax=ax,cmap="Greys",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"At least 25 riot events, {year}", size=25)
-    #cmap = plt.cm.get_cmap('Blues')
-    #divider = make_axes_locatable(ax)
-    #cax = divider.append_axes("right", size="2%", pad=0.01)   
-    #fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_actuals_riot_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_actuals_riot_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"out/struc_actuals_riot_{year}.jpeg",dpi=400,bbox_inches="tight")
-     
-for year in list(y.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(y[["country","d_remote"]].loc[y["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="d_remote",ax=ax,cmap="Greys",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"At least one fatality from remote violence, {year}", size=25)
-    #cmap = plt.cm.get_cmap('Blues')
-    #divider = make_axes_locatable(ax)
-    #cax = divider.append_axes("right", size="2%", pad=0.01)   
-    #fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_actuals_terror_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_actuals_terror_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"out/struc_actuals_terror_{year}.jpeg",dpi=400,bbox_inches="tight")
-     
-### Predictions ###
-for year in list(ensemble_war.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(ensemble_war[["country","preds_proba"]].loc[ensemble_war["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="preds_proba",ax=ax,cmap="Blues",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"Prediction of 1,000 fatalities from civil conflict in {year}", size=25)
-    cmap = plt.cm.get_cmap('Blues')
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="2%", pad=0.01)   
-    fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_map_preds_war_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_map_preds_war_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"out/struc_map_preds_war_{year}.jpeg",dpi=400,bbox_inches="tight")
-     
-for year in list(ensemble_conflict.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(ensemble_conflict[["country","preds_proba"]].loc[ensemble_war["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="preds_proba",ax=ax,cmap="Blues",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"Prediction of 25 fatalities from civil conflict in {year}", size=25)
-    cmap = plt.cm.get_cmap('Blues')
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="2%", pad=0.01)   
-    fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_map_preds_conflict_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_map_preds_conflict_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"out/struc_map_preds_conflict_{year}.jpeg",dpi=400,bbox_inches="tight")
-     
-for year in list(ensemble_protest.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(ensemble_protest[["country","preds_proba"]].loc[ensemble_war["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="preds_proba",ax=ax,cmap="Blues",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"Prediction of 25 protest events in {year}", size=25)
-    cmap = plt.cm.get_cmap('Blues')
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="2%", pad=0.01)   
-    fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_map_preds_protest_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_map_preds_protest_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"out/struc_map_preds_protest_{year}.jpeg",dpi=400,bbox_inches="tight")
-     
-for year in list(ensemble_riot.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(ensemble_riot[["country","preds_proba"]].loc[ensemble_war["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="preds_proba",ax=ax,cmap="Blues",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"Prediction of 25 riot events in {year}", size=25)
-    cmap = plt.cm.get_cmap('Blues')
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="2%", pad=0.01)   
-    fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_map_preds_riot_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_map_preds_riot_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"out/struc_map_preds_riot_{year}.jpeg",dpi=400,bbox_inches="tight")
-     
-for year in list(ensemble_terror.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(ensemble_terror[["country","preds_proba"]].loc[ensemble_war["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="preds_proba",ax=ax,cmap="Blues",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"Prediction of at least one fatality from terrorism in {year}", size=25)
-    cmap = plt.cm.get_cmap('Blues')
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="2%", pad=0.01)   
-    fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_map_preds_terror_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_map_preds_terror_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"out/struc_map_preds_terror_{year}.jpeg",dpi=400,bbox_inches="tight")
-     
-for year in list(ensemble_sb.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(ensemble_sb[["country","preds_proba"]].loc[ensemble_war["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="preds_proba",ax=ax,cmap="Blues",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"Prediction of at least one fatality from civil conflict in {year}", size=25)
-    cmap = plt.cm.get_cmap('Blues')
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="2%", pad=0.01)   
-    fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_map_preds_sb_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_map_preds_sb_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"out/struc_map_preds_sb_{year}.jpeg",dpi=400,bbox_inches="tight")
-     
-for year in list(ensemble_ns.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(ensemble_ns[["country","preds_proba"]].loc[ensemble_war["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="preds_proba",ax=ax,cmap="Blues",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"Prediction of at least one fatality from non-state conflict in {year}", size=25)
-    cmap = plt.cm.get_cmap('Blues')
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="2%", pad=0.01)   
-    fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_map_preds_ns_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_map_preds_ns_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"out/struc_map_preds_ns_{year}.jpeg",dpi=400,bbox_inches="tight")
-     
-for year in list(ensemble_osv.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry"]].merge(ensemble_osv[["country","preds_proba"]].loc[ensemble_war["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="preds_proba",ax=ax,cmap="Blues",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    plt.title(f"Prediction of at least one fatality from one-sided violence in {year}", size=25)
-    cmap = plt.cm.get_cmap('Blues')
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="2%", pad=0.01)   
-    fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_map_preds_osv_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_map_preds_osv_{year}.jpeg",dpi=400,bbox_inches="tight")
-    #plt.savefig(f"out/struc_map_preds_osv_{year}.jpeg",dpi=400,bbox_inches="tight")
- 
-    
+base=ensemble_protest[["year","country"]]
+base=base.loc[base["year"]<=2021]
+ensemble_osv_short=pd.merge(base, ensemble_osv,on=["year","country"],how="left")
+
+base=ensemble_protest[["year","country"]]
+base=base.loc[base["year"]<=2021]
+ensemble_protest_short=pd.merge(base, ensemble_protest,on=["year","country"],how="left")
+
+base=ensemble_protest[["year","country"]]
+base=base.loc[base["year"]<=2021]
+ensemble_riot_short=pd.merge(base, ensemble_riot,on=["year","country"],how="left")
+
+ensemble = (ensemble_protest_short.preds_proba*weights_n[0])+(ensemble_riot_short.preds_proba*weights_n[1])+(ensemble_sb_short.preds_proba*weights_n[3])+(ensemble_ns_short.preds_proba*weights_n[4])+(ensemble_osv_short.preds_proba*weights_n[5])
+ensemble_ens_2023=pd.concat([ensemble_protest_short[["country","year"]],pd.DataFrame(ensemble)],axis=1)
+ensemble_ens_2023.columns=["country","year","preds_proba"]
+
+ensemble_ens=pd.concat([ensemble_ens,ensemble_ens_2023],axis=0)
+ensemble_ens=ensemble_ens.sort_values(by=["country","year"])
+
 ensemble_ens["dummy"]=0
 ensemble_ens.loc[ensemble_ens["preds_proba"]>=0.5,"dummy"]=1
 ensemble_ens.to_csv("out/ensemble_ens_df.csv")
-    
-for year in list(ensemble_ens.year.unique()):
-    worldmap = gpd.read_file('data/ne_110m_admin_0_countries.shp')
-    worldmap['centroid'] =  worldmap.geometry.centroid
-    worldmap=worldmap.loc[(worldmap["CONTINENT"]!="Antarctica")]    
-    worldmap.loc[worldmap["NAME"]=="Bosnia and Herz.","NAME"]='Bosnia-Herzegovina' 
-    worldmap.loc[worldmap["NAME"]=="Cambodia","NAME"]='Cambodia (Kampuchea)'
-    worldmap.loc[worldmap["NAME"]=="Central African Rep.","NAME"]='Central African Republic'
-    worldmap.loc[worldmap["NAME"]=="Dem. Rep. Congo","NAME"]='DR Congo (Zaire)'
-    worldmap.loc[worldmap["NAME"]=="Côte d'Ivoire","NAME"]='Ivory Coast'
-    worldmap.loc[worldmap["NAME"]=="Dominican Rep.","NAME"]='Dominican Republic'
-    worldmap.loc[worldmap["NAME"]=='Timor-Leste',"NAME"]='East Timor'
-    worldmap.loc[worldmap["NAME"]=='Eq. Guinea',"NAME"]='Equatorial Guinea'
-    worldmap.loc[worldmap["NAME"]=='Macedonia',"NAME"]='Macedonia, FYR'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Myanmar',"NAME"]='Myanmar (Burma)'
-    worldmap.loc[worldmap["NAME"]=='Russia',"NAME"]='Russia (Soviet Union)'
-    worldmap.loc[worldmap["NAME"]=='S. Sudan',"NAME"]='South Sudan'
-    worldmap.loc[worldmap["NAME"]=='Solomon Is.',"NAME"]='Solomon Islands'
-    worldmap.loc[worldmap["NAME"]=='Yemen',"NAME"]='Yemen (North Yemen)'
-    worldmap.loc[worldmap["NAME"]=='Somaliland',"NAME"]='Somalia'
-    worldmap.loc[worldmap["NAME"]=='Palestine',"NAME"]='Israel'
-    worldmap.loc[worldmap["NAME"]=='Greenland',"NAME"]='Denmark'
-    worldmap.loc[worldmap["NAME"]=='W.Sahara',"NAME"]='Morocco'
-    fig, ax = plt.subplots(figsize=(12, 6))
-    plt.axis('off')
-    worldmap.boundary.plot(color="black",ax=ax,linewidth=0.8)
-    norm = mpl.colors.Normalize(vmin=0, vmax=1)
-    worldmap_m = worldmap[["NAME","geometry",'centroid']].merge(ensemble_ens[["country","preds_proba","dummy"]].loc[ensemble_ens["year"]==year], right_on=["country"],left_on=["NAME"],how='left')
-    worldmap_m.plot(column="preds_proba",ax=ax,cmap="Greens",norm=norm,missing_kwds={"color": "white","edgecolor": "gray","hatch": "///","label": "Missing values"})
-    worldmap_m_s=worldmap_m.loc[worldmap_m["dummy"]==1]
-    ax.scatter(worldmap_m_s['centroid'].x, worldmap_m_s['centroid'].y, color='black', marker='o', s=20)
-    plt.title(f"Predicted probability of collective action in {year}", size=25)
-    cmap = plt.cm.get_cmap('Greens')
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="2%", pad=0.01)   
-    fig.colorbar(cm.ScalarMappable(cmap=cmap,norm=norm),ax=ax,cax=cax)
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_map_preds_ens_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_map_preds_ens_{year}.jpeg",dpi=400,bbox_inches="tight")
-    plt.savefig(f"out/struc_map_preds_ens_{year}.jpeg",dpi=400,bbox_inches="tight")
-         
-############
-### Plot ###
-############
-
-base_war_evals=pd.read_csv("out/base_war_evals_df.csv",index_col=0)
-history_war_evals=pd.read_csv("out/history_war_evals_df.csv",index_col=0)
-demog_war_evals=pd.read_csv("out/demog_war_evals_df.csv",index_col=0)
-geog_war_evals=pd.read_csv("out/geog_war_evals_df.csv",index_col=0)
-econ_war_evals=pd.read_csv("out/econ_war_evals_df.csv",index_col=0)
-pol_war_evals=pd.read_csv("out/pol_war_evals_df.csv",index_col=0)
-evals_war_ensemble_df=pd.read_csv("out/evals_war_ensemble_df.csv",index_col=0)
-      
-base_conflict_evals=pd.read_csv("out/base_conflict_evals_df.csv",index_col=0)
-history_conflict_evals=pd.read_csv("out/history_conflict_evals_df.csv",index_col=0)
-demog_conflict_evals=pd.read_csv("out/demog_conflict_evals_df.csv",index_col=0)
-geog_conflict_evals=pd.read_csv("out/geog_conflict_evals_df.csv",index_col=0)
-econ_conflict_evals=pd.read_csv("out/econ_conflict_evals_df.csv",index_col=0)
-pol_conflict_evals=pd.read_csv("out/pol_conflict_evals_df.csv",index_col=0)
-evals_conflict_ensemble_df=pd.read_csv("out/evals_conflict_ensemble_df.csv",index_col=0)
-
-base_protest_evals=pd.read_csv("out/base_protest_evals_df.csv",index_col=0)
-history_protest_evals=pd.read_csv("out/history_protest_evals_df.csv",index_col=0)
-demog_protest_evals=pd.read_csv("out/demog_protest_evals_df.csv",index_col=0)
-geog_protest_evals=pd.read_csv("out/geog_protest_evals_df.csv",index_col=0)
-econ_protest_evals=pd.read_csv("out/econ_protest_evals_df.csv",index_col=0)
-pol_protest_evals=pd.read_csv("out/pol_protest_evals_df.csv",index_col=0)
-evals_protest_ensemble_df=pd.read_csv("out/evals_protest_ensemble_df.csv",index_col=0)
-
-base_riot_evals=pd.read_csv("out/base_riot_evals_df.csv",index_col=0)
-history_riot_evals=pd.read_csv("out/history_riot_evals_df.csv",index_col=0)
-demog_riot_evals=pd.read_csv("out/demog_riot_evals_df.csv",index_col=0)
-geog_riot_evals=pd.read_csv("out/geog_riot_evals_df.csv",index_col=0)
-econ_riot_evals=pd.read_csv("out/econ_riot_evals_df.csv",index_col=0)
-pol_riot_evals=pd.read_csv("out/pol_riot_evals_df.csv",index_col=0)
-evals_riot_ensemble_df=pd.read_csv("out/evals_riot_ensemble_df.csv",index_col=0)
-
-base_terror_evals=pd.read_csv("out/base_terror_evals_df.csv",index_col=0)
-history_terror_evals=pd.read_csv("out/history_terror_evals_df.csv",index_col=0)
-demog_terror_evals=pd.read_csv("out/demog_terror_evals_df.csv",index_col=0)
-geog_terror_evals=pd.read_csv("out/geog_terror_evals_df.csv",index_col=0)
-econ_terror_evals=pd.read_csv("out/econ_terror_evals_df.csv",index_col=0)
-pol_terror_evals=pd.read_csv("out/pol_terror_evals_df.csv",index_col=0)
-evals_terror_ensemble_df=pd.read_csv("out/evals_terror_ensemble_df.csv",index_col=0)
-
-base_sb_evals=pd.read_csv("out/base_sb_evals_df.csv",index_col=0)
-history_sb_evals=pd.read_csv("out/history_sb_evals_df.csv",index_col=0)
-demog_sb_evals=pd.read_csv("out/demog_sb_evals_df.csv",index_col=0)
-geog_sb_evals=pd.read_csv("out/geog_sb_evals_df.csv",index_col=0)
-econ_sb_evals=pd.read_csv("out/econ_sb_evals_df.csv",index_col=0)
-pol_sb_evals=pd.read_csv("out/pol_sb_evals_df.csv",index_col=0)
-evals_sb_ensemble_df=pd.read_csv("out/evals_sb_ensemble_df.csv",index_col=0)
-
-base_ns_evals=pd.read_csv("out/base_ns_evals_df.csv",index_col=0)
-history_ns_evals=pd.read_csv("out/history_ns_evals_df.csv",index_col=0)
-demog_ns_evals=pd.read_csv("out/demog_ns_evals_df.csv",index_col=0)
-geog_ns_evals=pd.read_csv("out/geog_ns_evals_df.csv",index_col=0)
-econ_ns_evals=pd.read_csv("out/econ_ns_evals_df.csv",index_col=0)
-pol_ns_evals=pd.read_csv("out/pol_ns_evals_df.csv",index_col=0)
-evals_ns_ensemble_df=pd.read_csv("out/evals_ns_ensemble_df.csv",index_col=0)
-
-base_osv_evals=pd.read_csv("out/base_osv_evals_df.csv",index_col=0)
-history_osv_evals=pd.read_csv("out/history_osv_evals_df.csv",index_col=0)
-demog_osv_evals=pd.read_csv("out/demog_osv_evals_df.csv",index_col=0)
-geog_osv_evals=pd.read_csv("out/geog_osv_evals_df.csv",index_col=0)
-econ_osv_evals=pd.read_csv("out/econ_osv_evals_df.csv",index_col=0)
-pol_osv_evals=pd.read_csv("out/pol_osv_evals_df.csv",index_col=0)
-evals_osv_ensemble_df=pd.read_csv("out/evals_osv_ensemble_df.csv",index_col=0)
-
-#############
-### AUROC ###
-#############
-
-#colormap = plt.get_cmap("terrain")
-#values = np.linspace(0, 1, 9)
-#colors = [colormap(value) for value in values]
-colors=["black","gray","forestgreen","lightgreen","steelblue","lightblue","purple","violet"]
-
-fig, ax1 = plt.subplots(figsize=(12,8))
-
-ax1.plot([0,2,4,6,8,10,12],[base_war_evals["0"].iloc[2],history_war_evals["0"].iloc[2],demog_war_evals["0"].iloc[2],geog_war_evals["0"].iloc[2],econ_war_evals["0"].iloc[2],pol_war_evals["0"].iloc[2],evals_war_ensemble_df["0"].iloc[2]], marker='o',color=colors[0],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10,12],[base_conflict_evals["0"].iloc[2],history_conflict_evals["0"].iloc[2],demog_conflict_evals["0"].iloc[2],geog_conflict_evals["0"].iloc[2],econ_conflict_evals["0"].iloc[2],pol_conflict_evals["0"].iloc[2],evals_conflict_ensemble_df["0"].iloc[2]], marker='o',color=colors[1],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10,12],[base_protest_evals["0"].iloc[2],history_protest_evals["0"].iloc[2],demog_protest_evals["0"].iloc[2],geog_protest_evals["0"].iloc[2],econ_protest_evals["0"].iloc[2],pol_protest_evals["0"].iloc[2],evals_protest_ensemble_df["0"].iloc[2]], marker="o",color=colors[2],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10,12],[base_riot_evals["0"].iloc[2],history_riot_evals["0"].iloc[2],demog_riot_evals["0"].iloc[2],geog_riot_evals["0"].iloc[2],econ_riot_evals["0"].iloc[2],pol_riot_evals["0"].iloc[2],evals_riot_ensemble_df["0"].iloc[2]], marker='o',color=colors[3],markersize=10,linewidth=3) # Riots
-ax1.plot([0,2,4,6,8,10,12],[base_terror_evals["0"].iloc[2],history_terror_evals["0"].iloc[2],demog_terror_evals["0"].iloc[2],geog_terror_evals["0"].iloc[2],econ_terror_evals["0"].iloc[2],pol_terror_evals["0"].iloc[1],evals_terror_ensemble_df["0"].iloc[2]], marker='o',color=colors[4],markersize=10,linewidth=3) # Terror
-ax1.plot([0,2,4,6,8,10,12],[base_sb_evals["0"].iloc[2],history_sb_evals["0"].iloc[2],demog_sb_evals["0"].iloc[2],geog_sb_evals["0"].iloc[2],econ_sb_evals["0"].iloc[2],pol_sb_evals["0"].iloc[2],evals_sb_ensemble_df["0"].iloc[2]], marker='o',color=colors[5],markersize=10,linewidth=3) # Civil conflict
-ax1.plot([0,2,4,6,8,10,12],[base_ns_evals["0"].iloc[2],history_ns_evals["0"].iloc[2],demog_ns_evals["0"].iloc[2],geog_ns_evals["0"].iloc[2],econ_ns_evals["0"].iloc[2],pol_ns_evals["0"].iloc[2],evals_ns_ensemble_df["0"].iloc[2]], marker='o',color=colors[6],markersize=10,linewidth=3) # Non-state
-ax1.plot([0,2,4,6,8,10,12],[base_osv_evals["0"].iloc[2],history_osv_evals["0"].iloc[2],demog_osv_evals["0"].iloc[2],geog_osv_evals["0"].iloc[2],econ_osv_evals["0"].iloc[2],pol_osv_evals["0"].iloc[2],evals_osv_ensemble_df["0"].iloc[2]], marker='o',color=colors[7],markersize=10,linewidth=3) # One-sided
-
-ax1.set_xlim(-0.5, 12.5)
-ax1.set_xticks([0,2,4,6,8,10,12], ["Baseline","History","Demography","Geography","Economy","Regime","Ensemble"],size=20)
-ax1.set_yticks([0.5,0.6,0.7,0.8,0.9,1],[0.5,0.6,0.7,0.8,0.9,1],size=20)
-ax1.set_ylabel("Area Under Receiver Operating Characteristic Curve",size=19)
-
-# Manually create a custom legend with different marker styles
-custom_legend = [
-    plt.Line2D([], [], color=colors[0], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[1], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[2], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[3], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[4], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[5], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[6], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[7], marker='o',linestyle='', markersize=8),
-    ]
-legend_labels = ['1,000 fatalities','25 fatalities','Protest','Riots','Terrorism','Civil conflict',"Non-state","One-sided"]
-
-# Add legend with custom markers
-plt.legend(custom_legend, legend_labels,loc='center left', bbox_to_anchor=(0, -0.14),ncol=4,prop={'size': 18})
-
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_evals_auroc_full.jpeg",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_evals_auroc_full.jpeg",dpi=400,bbox_inches="tight")
-plt.savefig("out/struc_evals_auroc_full.jpeg",dpi=400,bbox_inches="tight")
-
-
-fig, ax1 = plt.subplots(figsize=(12,8))
-
-ax1.plot([0,2,4,6,8,10],[history_war_evals["0"].iloc[2],demog_war_evals["0"].iloc[2],geog_war_evals["0"].iloc[2],econ_war_evals["0"].iloc[2],pol_war_evals["0"].iloc[2],evals_war_ensemble_df["0"].iloc[2]], marker='o',color=colors[0],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10],[history_conflict_evals["0"].iloc[2],demog_conflict_evals["0"].iloc[2],geog_conflict_evals["0"].iloc[2],econ_conflict_evals["0"].iloc[2],pol_conflict_evals["0"].iloc[2],evals_conflict_ensemble_df["0"].iloc[2]], marker='o',color=colors[1],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10],[history_protest_evals["0"].iloc[2],demog_protest_evals["0"].iloc[2],geog_protest_evals["0"].iloc[2],econ_protest_evals["0"].iloc[2],pol_protest_evals["0"].iloc[2],evals_protest_ensemble_df["0"].iloc[2]], marker="o",color=colors[2],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10],[history_riot_evals["0"].iloc[2],demog_riot_evals["0"].iloc[2],geog_riot_evals["0"].iloc[2],econ_riot_evals["0"].iloc[2],pol_riot_evals["0"].iloc[2],evals_riot_ensemble_df["0"].iloc[2]], marker='o',color=colors[3],markersize=10,linewidth=3) # Riots
-ax1.plot([0,2,4,6,8,10],[history_terror_evals["0"].iloc[2],demog_terror_evals["0"].iloc[2],geog_terror_evals["0"].iloc[2],econ_terror_evals["0"].iloc[2],pol_terror_evals["0"].iloc[1],evals_terror_ensemble_df["0"].iloc[2]], marker='o',color=colors[4],markersize=10,linewidth=3) # Terror
-ax1.plot([0,2,4,6,8,10],[history_sb_evals["0"].iloc[2],demog_sb_evals["0"].iloc[2],geog_sb_evals["0"].iloc[2],econ_sb_evals["0"].iloc[2],pol_sb_evals["0"].iloc[2],evals_sb_ensemble_df["0"].iloc[2]], marker='o',color=colors[5],markersize=10,linewidth=3) # Civil conflict
-ax1.plot([0,2,4,6,8,10],[history_ns_evals["0"].iloc[2],demog_ns_evals["0"].iloc[2],geog_ns_evals["0"].iloc[2],econ_ns_evals["0"].iloc[2],pol_ns_evals["0"].iloc[2],evals_ns_ensemble_df["0"].iloc[2]], marker='o',color=colors[6],markersize=10,linewidth=3) # Non-state
-ax1.plot([0,2,4,6,8,10],[history_osv_evals["0"].iloc[2],demog_osv_evals["0"].iloc[2],geog_osv_evals["0"].iloc[2],econ_osv_evals["0"].iloc[2],pol_osv_evals["0"].iloc[2],evals_osv_ensemble_df["0"].iloc[2]], marker='o',color=colors[7],markersize=10,linewidth=3) # One-sided
-
-ax1.set_xlim(-0.5, 10.5)
-ax1.set_xticks([0,2,4,6,8,10], ["History","Demography","Geography","Economy","Regime","Ensemble"],size=20)
-ax1.set_yticks([0.8,0.825,0.85,0.875,0.9,0.925,0.95,0.975,1],[0.8,0.825,0.85,0.875,0.9,0.925,0.95,0.975,1],size=20)
-ax1.set_ylabel("Area Under Receiver Operating Characteristic Curve",size=19)
-
-# Manually create a custom legend with different marker styles
-custom_legend = [
-    plt.Line2D([], [], color=colors[0], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[1], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[2], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[3], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[4], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[5], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[6], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[7], marker='o',linestyle='', markersize=8),
-    ]
-legend_labels = ['1,000 fatalities','25 fatalities','Protest','Riots','Terrorism','Civil conflict',"Non-state","One-sided"]
-
-# Add legend with custom markers
-plt.legend(custom_legend, legend_labels,loc='center left', bbox_to_anchor=(0, -0.14),ncol=4,prop={'size': 18})
-
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_evals_auroc.jpeg",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_evals_auroc.jpeg",dpi=400,bbox_inches="tight")
-plt.savefig("out/struc_evals_auroc.jpeg",dpi=400,bbox_inches="tight")
-
-############
-### AUPR ###
-############
-
-fig, ax1 = plt.subplots(figsize=(12,8))
-
-ax1.plot([0,2,4,6,8,10,12],[base_war_evals["0"].iloc[1],history_war_evals["0"].iloc[1],demog_war_evals["0"].iloc[1],geog_war_evals["0"].iloc[1],econ_war_evals["0"].iloc[1],pol_war_evals["0"].iloc[1],evals_war_ensemble_df["0"].iloc[1]], marker='o',color=colors[0],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10,12],[base_conflict_evals["0"].iloc[1],history_conflict_evals["0"].iloc[1],demog_conflict_evals["0"].iloc[1],geog_conflict_evals["0"].iloc[1],econ_conflict_evals["0"].iloc[1],pol_conflict_evals["0"].iloc[1],evals_conflict_ensemble_df["0"].iloc[1]], marker='o',color=colors[1],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10,12],[base_protest_evals["0"].iloc[1],history_protest_evals["0"].iloc[1],demog_protest_evals["0"].iloc[1],geog_protest_evals["0"].iloc[1],econ_protest_evals["0"].iloc[1],pol_protest_evals["0"].iloc[1],evals_protest_ensemble_df["0"].iloc[1]], marker='o',color=colors[2],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10,12],[base_riot_evals["0"].iloc[1],history_riot_evals["0"].iloc[1],demog_riot_evals["0"].iloc[1],geog_riot_evals["0"].iloc[1],econ_riot_evals["0"].iloc[1],pol_riot_evals["0"].iloc[1],evals_riot_ensemble_df["0"].iloc[1]], marker='o',color=colors[3],markersize=10,linewidth=3) # Riots
-ax1.plot([0,2,4,6,8,10,12],[base_terror_evals["0"].iloc[1],history_terror_evals["0"].iloc[1],demog_terror_evals["0"].iloc[1],geog_terror_evals["0"].iloc[1],econ_terror_evals["0"].iloc[1],pol_terror_evals["0"].iloc[1],evals_terror_ensemble_df["0"].iloc[1]], marker='o',color=colors[4],markersize=10,linewidth=3) # Terror
-ax1.plot([0,2,4,6,8,10,12],[base_sb_evals["0"].iloc[1],history_sb_evals["0"].iloc[1],demog_sb_evals["0"].iloc[1],geog_sb_evals["0"].iloc[1],econ_sb_evals["0"].iloc[1],pol_sb_evals["0"].iloc[1],evals_sb_ensemble_df["0"].iloc[1]], marker='o',color=colors[5],markersize=10,linewidth=3) # Civil conflict
-ax1.plot([0,2,4,6,8,10,12],[base_ns_evals["0"].iloc[1],history_ns_evals["0"].iloc[1],demog_ns_evals["0"].iloc[1],geog_ns_evals["0"].iloc[1],econ_ns_evals["0"].iloc[1],pol_ns_evals["0"].iloc[1],evals_ns_ensemble_df["0"].iloc[1]], marker='o',color=colors[6],markersize=10,linewidth=3) # Non-state
-ax1.plot([0,2,4,6,8,10,12],[base_osv_evals["0"].iloc[1],history_osv_evals["0"].iloc[1],demog_osv_evals["0"].iloc[1],geog_osv_evals["0"].iloc[1],econ_osv_evals["0"].iloc[1],pol_osv_evals["0"].iloc[1],evals_osv_ensemble_df["0"].iloc[1]], marker='o',color=colors[7],markersize=10,linewidth=3) # One-sided
-
-
-ax1.set_xlim(-0.5, 12.5)
-ax1.set_xticks([0,2,4,6,8,10,12], ["Baseline","History","Demography","Geography","Economy","Regime","Ensemble"],size=20)
-ax1.set_yticks([0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1],[0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1],size=20)
-ax1.set_ylabel("Area Under Precicion-Recall Curve",size=20)
-
-# Manually create a custom legend with different marker styles
-custom_legend = [
-    plt.Line2D([], [], color=colors[0], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[1], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[2], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[3], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[4], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[5], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[6], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[7], marker='o',linestyle='', markersize=8),
-    ]
-legend_labels = ['1,000 fatalities','25 fatalities','Protest','Riots','Terrorism','Civil conflict',"Non-state","One-sided"]
-
-# Add legend with custom markers
-plt.legend(custom_legend, legend_labels,loc='center left', bbox_to_anchor=(0, -0.14),ncol=4,prop={'size': 18})
-
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_evals_aupr_full.jpeg",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_evals_aupr_full.jpeg",dpi=400,bbox_inches="tight")
-plt.savefig("out/struc_evals_aupr_full",dpi=400,bbox_inches="tight")
-
-
-fig, ax1 = plt.subplots(figsize=(12,8))
-
-ax1.plot([0,2,4,6,8,10],[history_war_evals["0"].iloc[1],demog_war_evals["0"].iloc[1],geog_war_evals["0"].iloc[1],econ_war_evals["0"].iloc[1],pol_war_evals["0"].iloc[1],evals_war_ensemble_df["0"].iloc[1]], marker='o',color=colors[0],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10],[history_conflict_evals["0"].iloc[1],demog_conflict_evals["0"].iloc[1],geog_conflict_evals["0"].iloc[1],econ_conflict_evals["0"].iloc[1],pol_conflict_evals["0"].iloc[1],evals_conflict_ensemble_df["0"].iloc[1]], marker='o',color=colors[1],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10],[history_protest_evals["0"].iloc[1],demog_protest_evals["0"].iloc[1],geog_protest_evals["0"].iloc[1],econ_protest_evals["0"].iloc[1],pol_protest_evals["0"].iloc[1],evals_protest_ensemble_df["0"].iloc[1]], marker='o',color=colors[2],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10],[history_riot_evals["0"].iloc[1],demog_riot_evals["0"].iloc[1],geog_riot_evals["0"].iloc[1],econ_riot_evals["0"].iloc[1],pol_riot_evals["0"].iloc[1],evals_riot_ensemble_df["0"].iloc[1]], marker='o',color=colors[3],markersize=10,linewidth=3) # Riots
-ax1.plot([0,2,4,6,8,10],[history_terror_evals["0"].iloc[1],demog_terror_evals["0"].iloc[1],geog_terror_evals["0"].iloc[1],econ_terror_evals["0"].iloc[1],pol_terror_evals["0"].iloc[1],evals_terror_ensemble_df["0"].iloc[1]], marker='o',color=colors[4],markersize=10,linewidth=3) # Terror
-ax1.plot([0,2,4,6,8,10],[history_sb_evals["0"].iloc[1],demog_sb_evals["0"].iloc[1],geog_sb_evals["0"].iloc[1],econ_sb_evals["0"].iloc[1],pol_sb_evals["0"].iloc[1],evals_sb_ensemble_df["0"].iloc[1]], marker='o',color=colors[5],markersize=10,linewidth=3) # Civil conflict
-ax1.plot([0,2,4,6,8,10],[history_ns_evals["0"].iloc[1],demog_ns_evals["0"].iloc[1],geog_ns_evals["0"].iloc[1],econ_ns_evals["0"].iloc[1],pol_ns_evals["0"].iloc[1],evals_ns_ensemble_df["0"].iloc[1]], marker='o',color=colors[6],markersize=10,linewidth=3) # Non-state
-ax1.plot([0,2,4,6,8,10],[history_osv_evals["0"].iloc[1],demog_osv_evals["0"].iloc[1],geog_osv_evals["0"].iloc[1],econ_osv_evals["0"].iloc[1],pol_osv_evals["0"].iloc[1],evals_osv_ensemble_df["0"].iloc[1]], marker='o',color=colors[7],markersize=10,linewidth=3) # One-sided
-
-
-ax1.set_xlim(-0.5, 10.5)
-ax1.set_xticks([0,2,4,6,8,10], ["History","Demography","Geography","Economy","Regime","Ensemble"],size=20)
-ax1.set_yticks([0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1],[0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1],size=20)
-ax1.set_ylabel("Area Under Precicion-Recall Curve",size=20)
-
-# Manually create a custom legend with different marker styles
-custom_legend = [
-    plt.Line2D([], [], color=colors[0], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[1], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[2], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[3], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[4], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[5], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[6], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[7], marker='o',linestyle='', markersize=8),
-    ]
-legend_labels = ['1,000 fatalities','25 fatalities','Protest','Riots','Terrorism','Civil conflict',"Non-state","One-sided"]
-
-# Add legend with custom markers
-plt.legend(custom_legend, legend_labels,loc='center left', bbox_to_anchor=(0, -0.14),ncol=4,prop={'size': 18})
-
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_evals_aupr.jpeg",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_evals_aupr.jpeg",dpi=400,bbox_inches="tight")
-plt.savefig("out/struc_evals_aupr",dpi=400,bbox_inches="tight")
-
-#############
-### Brier ###
-#############
-
-fig, ax1 = plt.subplots(figsize=(12,8))
-
-ax1.plot([0,2,4,6,8,10,12],[base_war_evals["0"].iloc[0],history_war_evals["0"].iloc[0],demog_war_evals["0"].iloc[0],geog_war_evals["0"].iloc[0],econ_war_evals["0"].iloc[0],pol_war_evals["0"].iloc[0],evals_war_ensemble_df["0"].iloc[0]], marker='o',color=colors[0],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10,12],[base_conflict_evals["0"].iloc[0],history_conflict_evals["0"].iloc[0],demog_conflict_evals["0"].iloc[0],geog_conflict_evals["0"].iloc[0],econ_conflict_evals["0"].iloc[0],pol_conflict_evals["0"].iloc[0],evals_conflict_ensemble_df["0"].iloc[0]], marker='o',color=colors[1],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10,12],[base_protest_evals["0"].iloc[0],history_protest_evals["0"].iloc[0],demog_protest_evals["0"].iloc[0],geog_protest_evals["0"].iloc[0],econ_protest_evals["0"].iloc[0],pol_protest_evals["0"].iloc[0],evals_protest_ensemble_df["0"].iloc[0]], marker='o',color=colors[2],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10,12],[base_riot_evals["0"].iloc[0],history_riot_evals["0"].iloc[0],demog_riot_evals["0"].iloc[0],geog_riot_evals["0"].iloc[0],econ_riot_evals["0"].iloc[0],pol_riot_evals["0"].iloc[0],evals_riot_ensemble_df["0"].iloc[0]], marker='o',color=colors[3],markersize=10,linewidth=3) # Riots
-ax1.plot([0,2,4,6,8,10,12],[base_terror_evals["0"].iloc[0],history_terror_evals["0"].iloc[0],demog_terror_evals["0"].iloc[0],geog_terror_evals["0"].iloc[0],econ_terror_evals["0"].iloc[0],pol_terror_evals["0"].iloc[0],evals_terror_ensemble_df["0"].iloc[0]], marker='o',color=colors[4],markersize=10,linewidth=3) # Terror
-ax1.plot([0,2,4,6,8,10,12],[base_sb_evals["0"].iloc[0],history_sb_evals["0"].iloc[0],demog_sb_evals["0"].iloc[0],geog_sb_evals["0"].iloc[0],econ_sb_evals["0"].iloc[0],pol_sb_evals["0"].iloc[0],evals_sb_ensemble_df["0"].iloc[0]], marker='o',color=colors[5],markersize=10,linewidth=3) # Civil conflict
-ax1.plot([0,2,4,6,8,10,12],[base_ns_evals["0"].iloc[0],history_ns_evals["0"].iloc[0],demog_ns_evals["0"].iloc[0],geog_ns_evals["0"].iloc[0],econ_ns_evals["0"].iloc[0],pol_ns_evals["0"].iloc[0],evals_ns_ensemble_df["0"].iloc[0]], marker='o',color=colors[6],markersize=10,linewidth=3) # Non-state
-ax1.plot([0,2,4,6,8,10,12],[base_osv_evals["0"].iloc[0],history_osv_evals["0"].iloc[0],demog_osv_evals["0"].iloc[0],geog_osv_evals["0"].iloc[0],econ_osv_evals["0"].iloc[0],pol_osv_evals["0"].iloc[0],evals_osv_ensemble_df["0"].iloc[0]], marker='o',color=colors[7],markersize=10,linewidth=3) # One-sided
-
-ax1.set_xticks([0,2,4,6,8,10,12], ["Baseline","History","Demography","Geography","Economy","Regime","Ensemble"],size=20)
-ax1.set_yticks([0,0.1,0.2,0.3,0.4,0.5,0.6,0.7],[0,0.1,0.2,0.3,0.4,0.5,0.6,0.7],size=20)
-
-ax1.set_ylabel("Brier score",size=20)
-
-# Manually create a custom legend with different marker styles
-custom_legend = [
-    plt.Line2D([], [], color=colors[0], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[1], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[2], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[3], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[4], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[5], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[6], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[7], marker='o',linestyle='', markersize=8),
-    ]
-legend_labels = ['1,000 fatalities','25 fatalities','Protest','Riots','Terrorism','Civil conflict',"Non-state","One-sided"]
-
-# Add legend with custom markers
-plt.legend(custom_legend, legend_labels,loc='center left', bbox_to_anchor=(0, -0.14),ncol=4,prop={'size': 18})
-
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_evals_brier_full.jpeg",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_evals_brier_full.jpeg",dpi=400,bbox_inches="tight")
-plt.savefig("out/struc_evals_brier_full",dpi=400,bbox_inches="tight")
-
-
-fig, ax1 = plt.subplots(figsize=(12,8))
-
-ax1.plot([0,2,4,6,8,10],[history_war_evals["0"].iloc[0],demog_war_evals["0"].iloc[0],geog_war_evals["0"].iloc[0],econ_war_evals["0"].iloc[0],pol_war_evals["0"].iloc[0],evals_war_ensemble_df["0"].iloc[0]], marker='o',color=colors[0],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10],[history_conflict_evals["0"].iloc[0],demog_conflict_evals["0"].iloc[0],geog_conflict_evals["0"].iloc[0],econ_conflict_evals["0"].iloc[0],pol_conflict_evals["0"].iloc[0],evals_conflict_ensemble_df["0"].iloc[0]], marker='o',color=colors[1],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10],[history_protest_evals["0"].iloc[0],demog_protest_evals["0"].iloc[0],geog_protest_evals["0"].iloc[0],econ_protest_evals["0"].iloc[0],pol_protest_evals["0"].iloc[0],evals_protest_ensemble_df["0"].iloc[0]], marker='o',color=colors[2],markersize=10,linewidth=3) # Civil War
-ax1.plot([0,2,4,6,8,10],[history_riot_evals["0"].iloc[0],demog_riot_evals["0"].iloc[0],geog_riot_evals["0"].iloc[0],econ_riot_evals["0"].iloc[0],pol_riot_evals["0"].iloc[0],evals_riot_ensemble_df["0"].iloc[0]], marker='o',color=colors[3],markersize=10,linewidth=3) # Riots
-ax1.plot([0,2,4,6,8,10],[history_terror_evals["0"].iloc[0],demog_terror_evals["0"].iloc[0],geog_terror_evals["0"].iloc[0],econ_terror_evals["0"].iloc[0],pol_terror_evals["0"].iloc[0],evals_terror_ensemble_df["0"].iloc[0]], marker='o',color=colors[4],markersize=10,linewidth=3) # Terror
-ax1.plot([0,2,4,6,8,10],[history_sb_evals["0"].iloc[0],demog_sb_evals["0"].iloc[0],geog_sb_evals["0"].iloc[0],econ_sb_evals["0"].iloc[0],pol_sb_evals["0"].iloc[0],evals_sb_ensemble_df["0"].iloc[0]], marker='o',color=colors[5],markersize=10,linewidth=3) # Civil conflict
-ax1.plot([0,2,4,6,8,10],[history_ns_evals["0"].iloc[0],demog_ns_evals["0"].iloc[0],geog_ns_evals["0"].iloc[0],econ_ns_evals["0"].iloc[0],pol_ns_evals["0"].iloc[0],evals_ns_ensemble_df["0"].iloc[0]], marker='o',color=colors[6],markersize=10,linewidth=3) # Non-state
-ax1.plot([0,2,4,6,8,10],[history_osv_evals["0"].iloc[0],demog_osv_evals["0"].iloc[0],geog_osv_evals["0"].iloc[0],econ_osv_evals["0"].iloc[0],pol_osv_evals["0"].iloc[0],evals_osv_ensemble_df["0"].iloc[0]], marker='o',color=colors[7],markersize=10,linewidth=3) # One-sided
-
-ax1.set_xticks([0,2,4,6,8,10], ["History","Demography","Geography","Economy","Regime","Ensemble"],size=20)
-ax1.set_yticks([0,0.025,0.05,0.075,0.1,0.125,0.15,0.175,0.2],[0,0.025,0.05,0.075,0.1,0.125,0.15,0.175,0.2],size=20)
-
-ax1.set_ylabel("Brier score",size=20)
-
-# Manually create a custom legend with different marker styles
-custom_legend = [
-    plt.Line2D([], [], color=colors[0], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[1], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[2], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[3], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[4], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[5], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[6], marker='o',linestyle='', markersize=8),
-    plt.Line2D([], [], color=colors[7], marker='o',linestyle='', markersize=8),
-    ]
-legend_labels = ['1,000 fatalities','25 fatalities','Protest','Riots','Terrorism','Civil conflict',"Non-state","One-sided"]
-
-# Add legend with custom markers
-plt.legend(custom_legend, legend_labels,loc='center left', bbox_to_anchor=(0, -0.14),ncol=4,prop={'size': 18})
-
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/struc_evals_brier.jpeg",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/struc_evals_brier.jpeg",dpi=400,bbox_inches="tight")
-plt.savefig("out/struc_evals_brier",dpi=400,bbox_inches="tight")
-
-
-### Brier ###
-print(f"{round(base_conflict_evals['0'].iloc[0],5)} &  \\\
-      {round(history_conflict_evals['0'].iloc[0],5)} &  \\\
-      {round(demog_conflict_evals['0'].iloc[0],5)} &  \\\
-      {round(geog_conflict_evals['0'].iloc[0],5)} &  \\\
-      {round(econ_conflict_evals['0'].iloc[0],5)} &  \\\
-      {round(pol_conflict_evals['0'].iloc[0],5)} &  \\\
-      {round(evals_conflict_ensemble_df['0'].iloc[0],5)} ")
-           
-print(f"{round(base_protest_evals['0'].iloc[0],5)} &  \\\
-      {round(history_protest_evals['0'].iloc[0],5)} &  \\\
-      {round(demog_protest_evals['0'].iloc[0],5)} &  \\\
-      {round(geog_protest_evals['0'].iloc[0],5)} &  \\\
-      {round(econ_protest_evals['0'].iloc[0],5)} &  \\\
-      {round(pol_protest_evals['0'].iloc[0],5)}&  \\\
-      {round(evals_protest_ensemble_df['0'].iloc[0],5)}")
-      
-print(f"{round(base_riot_evals['0'].iloc[0],5)} &  \\\
-      {round(history_riot_evals['0'].iloc[0],5)} &  \\\
-      {round(demog_riot_evals['0'].iloc[0],5)} &  \\\
-      {round(geog_riot_evals['0'].iloc[0],5)} &  \\\
-      {round(econ_riot_evals['0'].iloc[0],5)} &  \\\
-      {round(pol_riot_evals['0'].iloc[0],5)} &  \\\
-      {round(evals_riot_ensemble_df['0'].iloc[0],5)}")
-
-print(f"{round(base_terror_evals['0'].iloc[0],5)} &  \\\
-      {round(history_terror_evals['0'].iloc[0],5)} &  \\\
-      {round(demog_terror_evals['0'].iloc[0],5)} &  \\\
-      {round(geog_terror_evals['0'].iloc[0],5)} &  \\\
-      {round(econ_terror_evals['0'].iloc[0],5)} &  \\\
-      {round(pol_terror_evals['0'].iloc[0],5)}&  \\\
-      {round(evals_terror_ensemble_df['0'].iloc[0],5)}")
-
-print(f"{round(base_sb_evals['0'].iloc[0],5)} &  \\\
-      {round(history_sb_evals['0'].iloc[0],5)} &  \\\
-      {round(demog_sb_evals['0'].iloc[0],5)} &  \\\
-      {round(geog_sb_evals['0'].iloc[0],5)} &  \\\
-      {round(econ_sb_evals['0'].iloc[0],5)} &  \\\
-      {round(pol_sb_evals['0'].iloc[0],5)}&  \\\
-      {round(evals_sb_ensemble_df['0'].iloc[0],5)}")
-
-print(f"{round(base_ns_evals['0'].iloc[0],5)} &  \\\
-      {round(history_ns_evals['0'].iloc[0],5)} &  \\\
-      {round(demog_ns_evals['0'].iloc[0],5)} &  \\\
-      {round(geog_ns_evals['0'].iloc[0],5)} &  \\\
-      {round(econ_ns_evals['0'].iloc[0],5)} &  \\\
-      {round(pol_ns_evals['0'].iloc[0],5)} &  \\\
-      {round(evals_ns_ensemble_df['0'].iloc[0],5)}")      
- 
-print(f"{round(base_osv_evals['0'].iloc[0],5)} &  \\\
-      {round(history_osv_evals['0'].iloc[0],5)} &  \\\
-      {round(demog_osv_evals['0'].iloc[0],5)} &  \\\
-      {round(geog_osv_evals['0'].iloc[0],5)} &  \\\
-      {round(econ_osv_evals['0'].iloc[0],5)} &  \\\
-      {round(pol_osv_evals['0'].iloc[0],5)}&  \\\
-      {round(evals_osv_ensemble_df['0'].iloc[0],5)}")            
-  
-### AUPR ###
-print(f"{round(base_conflict_evals['0'].iloc[1],5)} &  \\\
-      {round(history_conflict_evals['0'].iloc[1],5)} &  \\\
-      {round(demog_conflict_evals['0'].iloc[1],5)} &  \\\
-      {round(geog_conflict_evals['0'].iloc[1],5)} &  \\\
-      {round(econ_conflict_evals['0'].iloc[1],5)} &  \\\
-      {round(pol_conflict_evals['0'].iloc[1],5)}&  \\\
-      {round(evals_conflict_ensemble_df['0'].iloc[1],5)}")
-           
-print(f"{round(base_protest_evals['0'].iloc[1],5)} &  \\\
-      {round(history_protest_evals['0'].iloc[1],5)} &  \\\
-      {round(demog_protest_evals['0'].iloc[1],5)} &  \\\
-      {round(geog_protest_evals['0'].iloc[1],5)} &  \\\
-      {round(econ_protest_evals['0'].iloc[1],5)} &  \\\
-      {round(pol_protest_evals['0'].iloc[1],5)}&  \\\
-      {round(evals_protest_ensemble_df['0'].iloc[1],5)}")
-      
-print(f"{round(base_riot_evals['0'].iloc[1],5)} &  \\\
-      {round(history_riot_evals['0'].iloc[1],5)} &  \\\
-      {round(demog_riot_evals['0'].iloc[1],5)} &  \\\
-      {round(geog_riot_evals['0'].iloc[1],5)} &  \\\
-      {round(econ_riot_evals['0'].iloc[1],5)} &  \\\
-      {round(pol_riot_evals['0'].iloc[1],5)}&  \\\
-      {round(evals_riot_ensemble_df['0'].iloc[1],5)}")
-
-print(f"{round(base_terror_evals['0'].iloc[1],5)} &  \\\
-      {round(history_terror_evals['0'].iloc[1],5)} &  \\\
-      {round(demog_terror_evals['0'].iloc[1],5)} &  \\\
-      {round(geog_terror_evals['0'].iloc[1],5)} &  \\\
-      {round(econ_terror_evals['0'].iloc[1],5)} &  \\\
-      {round(pol_terror_evals['0'].iloc[1],5)}&  \\\
-      {round(evals_terror_ensemble_df['0'].iloc[1],5)}")
-
-print(f"{round(base_sb_evals['0'].iloc[1],5)} &  \\\
-      {round(history_sb_evals['0'].iloc[1],5)} &  \\\
-      {round(demog_sb_evals['0'].iloc[1],5)} &  \\\
-      {round(geog_sb_evals['0'].iloc[1],5)} &  \\\
-      {round(econ_sb_evals['0'].iloc[1],5)} &  \\\
-      {round(pol_sb_evals['0'].iloc[1],5)}&  \\\
-      {round(evals_sb_ensemble_df['0'].iloc[1],5)}")
-
-print(f"{round(base_ns_evals['0'].iloc[1],5)} &  \\\
-      {round(history_ns_evals['0'].iloc[1],5)} &  \\\
-      {round(demog_ns_evals['0'].iloc[1],5)} &  \\\
-      {round(geog_ns_evals['0'].iloc[1],5)} &  \\\
-      {round(econ_ns_evals['0'].iloc[1],5)} &  \\\
-      {round(pol_ns_evals['0'].iloc[1],5)}&  \\\
-      {round(evals_ns_ensemble_df['0'].iloc[1],5)}")      
- 
-print(f"{round(base_osv_evals['0'].iloc[1],5)} &  \\\
-      {round(history_osv_evals['0'].iloc[1],5)} &  \\\
-      {round(demog_osv_evals['0'].iloc[1],5)} &  \\\
-      {round(geog_osv_evals['0'].iloc[1],5)} &  \\\
-      {round(econ_osv_evals['0'].iloc[1],5)} &  \\\
-      {round(pol_osv_evals['0'].iloc[1],5)}&  \\\
-      {round(evals_osv_ensemble_df['0'].iloc[1],5)}")        
- 
-### AUROC ###
-print(f"{round(base_conflict_evals['0'].iloc[2],5)} &  \\\
-      {round(history_conflict_evals['0'].iloc[2],5)} &  \\\
-      {round(demog_conflict_evals['0'].iloc[2],5)} &  \\\
-      {round(geog_conflict_evals['0'].iloc[2],5)} &  \\\
-      {round(econ_conflict_evals['0'].iloc[2],5)} &  \\\
-      {round(pol_conflict_evals['0'].iloc[2],5)}&  \\\
-      {round(evals_conflict_ensemble_df['0'].iloc[2],5)}")
-           
-print(f"{round(base_protest_evals['0'].iloc[2],5)} &  \\\
-      {round(history_protest_evals['0'].iloc[2],5)} &  \\\
-      {round(demog_protest_evals['0'].iloc[2],5)} &  \\\
-      {round(geog_protest_evals['0'].iloc[2],5)} &  \\\
-      {round(econ_protest_evals['0'].iloc[2],5)} &  \\\
-      {round(pol_protest_evals['0'].iloc[2],5)}&  \\\
-      {round(evals_protest_ensemble_df['0'].iloc[2],5)}")
-      
-print(f"{round(base_riot_evals['0'].iloc[2],5)} &  \\\
-      {round(history_riot_evals['0'].iloc[2],5)} &  \\\
-      {round(demog_riot_evals['0'].iloc[2],5)} &  \\\
-      {round(geog_riot_evals['0'].iloc[2],5)} &  \\\
-      {round(econ_riot_evals['0'].iloc[2],5)} &  \\\
-      {round(pol_riot_evals['0'].iloc[2],5)}&  \\\
-      {round(evals_riot_ensemble_df['0'].iloc[2],5)}")
-
-print(f"{round(base_terror_evals['0'].iloc[2],5)} &  \\\
-      {round(history_terror_evals['0'].iloc[2],5)} &  \\\
-      {round(demog_terror_evals['0'].iloc[2],5)} &  \\\
-      {round(geog_terror_evals['0'].iloc[2],5)} &  \\\
-      {round(econ_terror_evals['0'].iloc[2],5)} &  \\\
-      {round(pol_terror_evals['0'].iloc[2],5)}&  \\\
-      {round(evals_terror_ensemble_df['0'].iloc[2],5)}")
-
-print(f"{round(base_sb_evals['0'].iloc[2],5)} &  \\\
-      {round(history_sb_evals['0'].iloc[2],5)} &  \\\
-      {round(demog_sb_evals['0'].iloc[2],5)} &  \\\
-      {round(geog_sb_evals['0'].iloc[2],5)} &  \\\
-      {round(econ_sb_evals['0'].iloc[2],5)} &  \\\
-      {round(pol_sb_evals['0'].iloc[2],5)}&  \\\
-      {round(evals_sb_ensemble_df['0'].iloc[2],5)}")
-
-print(f"{round(base_ns_evals['0'].iloc[2],5)} &  \\\
-      {round(history_ns_evals['0'].iloc[2],5)} &  \\\
-      {round(demog_ns_evals['0'].iloc[2],5)} &  \\\
-      {round(geog_ns_evals['0'].iloc[2],5)} &  \\\
-      {round(econ_ns_evals['0'].iloc[2],5)} &  \\\
-      {round(pol_ns_evals['0'].iloc[2],5)}&  \\\
-      {round(evals_ns_ensemble_df['0'].iloc[2],5)}")  
- 
-print(f"{round(base_osv_evals['0'].iloc[2],5)} &  \\\
-      {round(history_osv_evals['0'].iloc[2],5)} &  \\\
-      {round(demog_osv_evals['0'].iloc[2],5)} &  \\\
-      {round(geog_osv_evals['0'].iloc[2],5)} &  \\\
-      {round(econ_osv_evals['0'].iloc[2],5)} &  \\\
-      {round(pol_osv_evals['0'].iloc[2],5)}&  \\\
-      {round(evals_osv_ensemble_df['0'].iloc[2],5)}")    
-      
-###################
-### Final Plots ###
-###################
-
-colors=["black","gray","forestgreen","lightgreen","steelblue","lightblue","purple","violet"]
-
-fig, ax = plt.subplots(figsize=(12,8))
-
-plt.scatter(history_war_evals["0"].iloc[1],history_war_evals["0"].iloc[2],c=colors[0],s=70,marker="o") 
-plt.scatter(demog_war_evals["0"].iloc[1],demog_war_evals["0"].iloc[2],c=colors[0],s=70,marker="v") 
-plt.scatter(geog_war_evals["0"].iloc[1],geog_war_evals["0"].iloc[2],c=colors[0],s=70,marker="s") 
-#ax.add_patch(Rectangle((econ_war_evals["0"].iloc[1],econ_war_evals["0"].iloc[2]), width=0.02, height=0.004, color=colors[0]))
-plt.scatter(econ_war_evals["0"].iloc[1],econ_war_evals["0"].iloc[2],c=colors[0],s=120,marker="_") 
-plt.scatter(pol_war_evals["0"].iloc[1],pol_war_evals["0"].iloc[2],c=colors[0],s=70,marker="D") 
-plt.scatter(evals_war_ensemble_df["0"].iloc[1],evals_war_ensemble_df["0"].iloc[2],c=colors[0],s=120,marker="x") 
-
-plt.scatter(history_conflict_evals["0"].iloc[1],history_conflict_evals["0"].iloc[2],c=colors[1],s=70,marker="o") 
-plt.scatter(demog_conflict_evals["0"].iloc[1],demog_conflict_evals["0"].iloc[2],c=colors[1],s=70,marker="v") 
-plt.scatter(geog_conflict_evals["0"].iloc[1],geog_conflict_evals["0"].iloc[2],c=colors[1],s=70,marker="s") 
-#ax.add_patch(Rectangle((econ_conflict_evals["0"].iloc[1],econ_conflict_evals["0"].iloc[2]), width=0.02, height=0.004, color=colors[1]))
-plt.scatter(econ_conflict_evals["0"].iloc[1],econ_conflict_evals["0"].iloc[2],c=colors[1],s=120,marker="_") 
-plt.scatter(pol_conflict_evals["0"].iloc[1],pol_conflict_evals["0"].iloc[2],c=colors[1],s=70,marker="D") 
-plt.scatter(evals_conflict_ensemble_df["0"].iloc[1],evals_conflict_ensemble_df["0"].iloc[2],c=colors[1],s=120,marker="x") 
-
-plt.scatter(history_protest_evals["0"].iloc[1],history_protest_evals["0"].iloc[2],c=colors[2],s=70,marker="o",edgecolors="gray") 
-plt.scatter(demog_protest_evals["0"].iloc[1],demog_protest_evals["0"].iloc[2],c=colors[2],s=70,marker="v") 
-plt.scatter(geog_protest_evals["0"].iloc[1],geog_protest_evals["0"].iloc[2],c=colors[2],s=70,marker="s") 
-#ax.add_patch(Rectangle((econ_protest_evals["0"].iloc[1],econ_protest_evals["0"].iloc[2]), width=0.02, height=0.004, color=colors[2]))
-plt.scatter(econ_protest_evals["0"].iloc[1],econ_protest_evals["0"].iloc[2],c=colors[2],s=120,marker="_") 
-plt.scatter(pol_protest_evals["0"].iloc[1],pol_protest_evals["0"].iloc[2],c=colors[2],s=70,marker="D") 
-plt.scatter(evals_protest_ensemble_df["0"].iloc[1],evals_protest_ensemble_df["0"].iloc[2],c=colors[2],s=120,marker="x") 
-
-plt.scatter(history_riot_evals["0"].iloc[1],history_riot_evals["0"].iloc[2],c=colors[3],s=70,marker="o") 
-plt.scatter(demog_riot_evals["0"].iloc[1],demog_riot_evals["0"].iloc[2],c=colors[3],s=70,marker="v") 
-plt.scatter(geog_riot_evals["0"].iloc[1],geog_riot_evals["0"].iloc[2],c=colors[3],s=70,marker="s") 
-#ax.add_patch(Rectangle((econ_riot_evals["0"].iloc[1],econ_riot_evals["0"].iloc[2]), width=0.02, height=0.004, color=colors[3]))
-plt.scatter(econ_riot_evals["0"].iloc[1],econ_riot_evals["0"].iloc[2],c=colors[3],s=120,marker="_") 
-plt.scatter(pol_riot_evals["0"].iloc[1],pol_riot_evals["0"].iloc[2],c=colors[3],s=70,marker="D") 
-plt.scatter(evals_riot_ensemble_df["0"].iloc[1],evals_riot_ensemble_df["0"].iloc[2],c=colors[3],s=120,marker="x") 
-
-plt.scatter(history_terror_evals["0"].iloc[1],history_terror_evals["0"].iloc[2],c=colors[4],s=70,marker="o") 
-plt.scatter(demog_terror_evals["0"].iloc[1],demog_terror_evals["0"].iloc[2],c=colors[4],s=70,marker="v") 
-plt.scatter(geog_terror_evals["0"].iloc[1],geog_terror_evals["0"].iloc[2],c=colors[4],s=70,marker="s") 
-#ax.add_patch(Rectangle((econ_terror_evals["0"].iloc[1],econ_terror_evals["0"].iloc[2]), width=0.02, height=0.004, color=colors[4]))
-plt.scatter(econ_terror_evals["0"].iloc[1],econ_terror_evals["0"].iloc[2],c=colors[4],s=120,marker="_") 
-plt.scatter(pol_terror_evals["0"].iloc[1],pol_terror_evals["0"].iloc[2],c=colors[4],s=70,marker="D") 
-plt.scatter(evals_terror_ensemble_df["0"].iloc[1],evals_terror_ensemble_df["0"].iloc[2],c=colors[4],s=120,marker="x") 
-
-plt.scatter(history_sb_evals["0"].iloc[1],history_sb_evals["0"].iloc[2],c=colors[5],s=70,marker="o") 
-plt.scatter(demog_sb_evals["0"].iloc[1],demog_sb_evals["0"].iloc[2],c=colors[5],s=70,marker="v") 
-plt.scatter(geog_sb_evals["0"].iloc[1],geog_sb_evals["0"].iloc[2],c=colors[5],s=70,marker="s") 
-#ax.add_patch(Rectangle((econ_sb_evals["0"].iloc[1],econ_sb_evals["0"].iloc[2]), width=0.02, height=0.004, color=colors[5]))
-plt.scatter(econ_sb_evals["0"].iloc[1],econ_sb_evals["0"].iloc[2],c=colors[5],s=120,marker="_") 
-plt.scatter(pol_sb_evals["0"].iloc[1],pol_sb_evals["0"].iloc[2],c=colors[5],s=70,marker="D") 
-plt.scatter(evals_sb_ensemble_df["0"].iloc[1],evals_sb_ensemble_df["0"].iloc[2],c=colors[5],s=120,marker="x") 
-
-plt.scatter(history_ns_evals["0"].iloc[1],history_ns_evals["0"].iloc[2],c=colors[6],s=70,marker="o") 
-plt.scatter(demog_ns_evals["0"].iloc[1],demog_ns_evals["0"].iloc[2],c=colors[6],s=70,marker="v") 
-plt.scatter(geog_ns_evals["0"].iloc[1],geog_ns_evals["0"].iloc[2],c=colors[6],s=70,marker="s") 
-#ax.add_patch(Rectangle((econ_ns_evals["0"].iloc[1],econ_ns_evals["0"].iloc[2]), width=0.02, height=0.004, color=colors[6]))
-plt.scatter(econ_ns_evals["0"].iloc[1],econ_ns_evals["0"].iloc[2],c=colors[6],s=120,marker="_") 
-plt.scatter(pol_ns_evals["0"].iloc[1],pol_ns_evals["0"].iloc[2],c=colors[6],s=70,marker="D") 
-plt.scatter(evals_ns_ensemble_df["0"].iloc[1],evals_ns_ensemble_df["0"].iloc[2],c=colors[6],s=120,marker="x") 
-
-plt.scatter(history_osv_evals["0"].iloc[1],history_osv_evals["0"].iloc[2],c=colors[7],s=70,marker="o") 
-plt.scatter(demog_osv_evals["0"].iloc[1],demog_osv_evals["0"].iloc[2],c=colors[7],s=70,marker="v") 
-plt.scatter(geog_osv_evals["0"].iloc[1],geog_osv_evals["0"].iloc[2],c=colors[7],s=70,marker="s") 
-#ax.add_patch(Rectangle((econ_osv_evals["0"].iloc[1],econ_osv_evals["0"].iloc[2]), width=0.02, height=0.004, color=colors[7]))
-plt.scatter(econ_osv_evals["0"].iloc[1],econ_osv_evals["0"].iloc[2],c=colors[7],s=120,marker="_") 
-plt.scatter(pol_osv_evals["0"].iloc[1],pol_osv_evals["0"].iloc[2],c=colors[7],s=70,marker="D") 
-plt.scatter(evals_osv_ensemble_df["0"].iloc[1],evals_osv_ensemble_df["0"].iloc[2],c=colors[7],s=120,marker="x") 
-
-# Create custom legend
-handles = [
-    mpatches.Patch(color='black', label='1,000 fatalities'),
-    mpatches.Patch(color='gray', label='25 fatalities'),
-    mpatches.Patch(color='forestgreen', label='Protest'),
-    mpatches.Patch(color='lightgreen', label='Riots'),
-    mpatches.Patch(color='steelblue', label='Remote Violence'),
-    mpatches.Patch(color='lightblue', label='Civil Conflict'),
-    mpatches.Patch(color='purple', label='Non-state'),
-    mpatches.Patch(color='violet', label='One-sided')]
-
-marker_handles = [
-    mlines.Line2D([], [], color='black', marker='o', linestyle='None', markersize=10, label='Conflict History'),
-    mlines.Line2D([], [], color='black', marker='v', linestyle='None', markersize=10, label='Demography'),
-    mlines.Line2D([], [], color='black', marker='s', linestyle='None', markersize=10, label='Geography'),
-    mlines.Line2D([], [], color='black', marker='_', linestyle='None', markersize=12, label='Economy'),
-    mlines.Line2D([], [], color='black', marker='D', linestyle='None', markersize=10, label='Regime'),
-    mlines.Line2D([], [], color='black', marker='x', linestyle='None', markersize=10, label='Ensemble'),
-
-]
-
-legend1=ax.legend(handles=handles, title='Outcomes', loc='center left', bbox_to_anchor=(1, 0.7),frameon=False,fontsize=15,title_fontsize=15)
-ax.add_artist(legend1) 
-legend2 = ax.legend(handles=marker_handles,title='Thematic Models',loc='lower left',frameon=False,fontsize=15,title_fontsize=15,bbox_to_anchor=(1, 0.1))
-ax.set_yticks([0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1],[0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1],size=20)
-ax.set_xticks([0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1],[0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1],size=20)
-
-ax.set_xlabel("Area Under Precivion-Recall Curve",size=20)
-ax.set_ylabel("Area Under Receiver Operating Characteristic Cruve",size=20)
-
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/evals_final.png",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/evals_final.png",dpi=400,bbox_inches="tight")
-plt.savefig("out/evals_final.png",dpi=400,bbox_inches="tight")
-plt.show()
-    
-#################   
-### Bar Plots ###
-#################   
-
-### Conflict History ###
-
-s_protest = pd.DataFrame(list(zip(['d_protest_lag1',"d_protest_zeros_decay","d_neighbors_proteset_event_counts_lag1","regime_duration",'pop_refugee','pop_refugee_id'], np.abs(history_protest_shap[:, :, 1]).mean(0))),columns=['Feature','Protest'])
-s_protest.loc[s_protest["Feature"]=="d_protest_lag1","Feature"]="d_lag1"
-s_protest.loc[s_protest["Feature"]=="d_protest_zeros_decay","Feature"]="d_zeros_decay"
-s_protest.loc[s_protest["Feature"]=="d_neighbors_proteset_event_counts_lag1","Feature"]="d_neighbors_lag1"
-shap_conflict_hist = s_protest[~s_protest['Feature'].str.contains('_id')]
-
-s_riot = pd.DataFrame(list(zip(['d_riot_lag1',"d_riot_zeros_decay","d_neighbors_riot_event_counts_lag1",'regime_duration', 'pop_refugee', 'pop_refugee_id'], np.abs(history_riot_shap[:, :, 1]).mean(0))),columns=['Feature','Riot'])
-s_riot.loc[s_riot["Feature"]=="d_riot_lag1","Feature"]="d_lag1"
-s_riot.loc[s_riot["Feature"]=="d_riot_zeros_decay","Feature"]="d_zeros_decay"
-s_riot.loc[s_riot["Feature"]=="d_neighbors_riot_event_counts_lag1","Feature"]="d_neighbors_lag1"
-shap_conflict_hist = pd.merge(shap_conflict_hist, s_riot[~s_riot['Feature'].str.contains('_id')],on=["Feature"])
-
-s_remote = pd.DataFrame(list(zip(['d_remote_lag1',"d_remote_zeros_decay","d_neighbors_remote_event_counts_lag1",'regime_duration', 'pop_refugee', 'pop_refugee_id'], np.abs(history_terror_shap[:, :, 1]).mean(0))),columns=['Feature','Remote'])
-s_remote.loc[s_remote["Feature"]=="d_remote_lag1","Feature"]="d_lag1"
-s_remote.loc[s_remote["Feature"]=="d_remote_zeros_decay","Feature"]="d_zeros_decay"
-s_remote.loc[s_remote["Feature"]=="d_neighbors_remote_event_counts_lag1","Feature"]="d_neighbors_lag1"
-shap_conflict_hist = pd.merge(shap_conflict_hist, s_remote[~s_remote['Feature'].str.contains('_id')],on=["Feature"])
-
-s_sb = pd.DataFrame(list(zip(['d_sb_lag1',"d_sb_zeros_decay","d_neighbors_sb_event_counts_lag1",'regime_duration', 'pop_refugee', 'pop_refugee_id'], np.abs(history_sb_shap[:, :, 1]).mean(0))),columns=['Feature','State-based'])
-s_sb.loc[s_sb["Feature"]=="d_sb_lag1","Feature"]="d_lag1"
-s_sb.loc[s_sb["Feature"]=="d_sb_zeros_decay","Feature"]="d_zeros_decay"
-s_sb.loc[s_sb["Feature"]=="d_neighbors_sb_event_counts_lag1","Feature"]="d_neighbors_lag1"
-shap_conflict_hist = pd.merge(shap_conflict_hist, s_sb[~s_sb['Feature'].str.contains('_id')],on=["Feature"])
-
-s_osv = pd.DataFrame(list(zip(['d_osv_lag1',"d_osv_zeros_decay","d_neighbors_osv_event_counts_lag1",'regime_duration', 'pop_refugee', 'pop_refugee_id'], np.abs(history_osv_shap[:, :, 1]).mean(0))),columns=['Feature','One-sided'])
-s_osv.loc[s_osv["Feature"]=="d_osv_lag1","Feature"]="d_lag1"
-s_osv.loc[s_osv["Feature"]=="d_osv_zeros_decay","Feature"]="d_zeros_decay"
-s_osv.loc[s_osv["Feature"]=="d_neighbors_osv_event_counts_lag1","Feature"]="d_neighbors_lag1"
-shap_conflict_hist = pd.merge(shap_conflict_hist, s_osv[~s_osv['Feature'].str.contains('_id')],on=["Feature"])
-
-s_ns = pd.DataFrame(list(zip(['d_ns_lag1',"d_ns_zeros_decay","d_neighbors_ns_event_counts_lag1",'regime_duration', 'pop_refugee', 'pop_refugee_id'], np.abs(history_ns_shap[:, :, 1]).mean(0))),columns=['Feature','Non-state'])
-s_ns.loc[s_ns["Feature"]=="d_ns_lag1","Feature"]="d_lag1"
-s_ns.loc[s_ns["Feature"]=="d_ns_zeros_decay","Feature"]="d_zeros_decay"
-s_ns.loc[s_ns["Feature"]=="d_neighbors_ns_event_counts_lag1","Feature"]="d_neighbors_lag1"
-shap_conflict_hist = pd.merge(shap_conflict_hist, s_ns[~s_ns['Feature'].str.contains('_id')],on=["Feature"])
-
-shap_conflict_hist_s=shap_conflict_hist.iloc[:, 1:]
-colors=["forestgreen","lightgreen","steelblue","lightblue","purple","violet"]
-
-
-y = np.arange(len(shap_conflict_hist_s.index))
-bar_height = 0.8
-bottom = np.zeros(len(shap_conflict_hist_s.index))
-
-fig, ax = plt.subplots(figsize=(10, 6))
-
-for i, col in enumerate(shap_conflict_hist_s.columns):
-    ax.barh(y, shap_conflict_hist_s[col], left=bottom, height=bar_height, label=col, color=colors[i])
-    bottom += shap_conflict_hist_s[col]
-
-# Create custom legend
-handles = [
-    mpatches.Patch(color='forestgreen', label='Protest'),
-    mpatches.Patch(color='lightgreen', label='Riots'),
-    mpatches.Patch(color='steelblue', label='Remote Violence'),
-    mpatches.Patch(color='lightblue', label='Civil Conflict'),
-    mpatches.Patch(color='purple', label='Non-state'),
-    mpatches.Patch(color='violet', label='One-sided')]
-
-legend1=ax.legend(handles=handles, title='Outcomes', loc='center left', bbox_to_anchor=(1, 0.7),frameon=False,fontsize=15,title_fontsize=15)
-ax.set_yticks([0,1,2,3,4],["t-1 lag","Time since","Neighborhood","Regime duration","Refugee population"],size=15)
-ax.set_xticks([0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.1,1.2,1.3,1.4,1.5,1.6],[0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.1,1.2,1.3,1.4,1.5,1.6],size=15)
-
-ax.set_xlabel("SHAP Values",size=20)
-
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/imp_conflict_history.png",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/imp_conflict_history.png",dpi=400,bbox_inches="tight")
-plt.savefig("out/imp_conflict_history.png",dpi=400,bbox_inches="tight")
-plt.show()
-
-base=pd.read_csv("data/data_out/acled_cy_protest.csv",index_col=0)
-base = base[["year","gw_codes"]][~base['gw_codes'].isin(list(exclude.values()))]
-x=pd.read_csv("out/df_conf_hist_full.csv",index_col=0)
-x=pd.merge(left=base,right=x,on=["year","gw_codes"],how="left")
-
-fig,ax = plt.subplots(figsize=(12, 8))
-x_vals=x[["d_protest_lag1"]].reset_index(drop=True)
-y_vals=pd.DataFrame(history_protest_shap[:,:,1])[0].reset_index(drop=True)
-violin_parts=ax.violinplot(y_vals.loc[x_vals["d_protest_lag1"] == 0],positions=[0], widths=0.5,showmeans=False, showextrema=False, showmedians=False)
-for pc in violin_parts['bodies']:
-    pc.set_facecolor(colors[0])
-violin_parts=ax.violinplot(y_vals.loc[x_vals["d_protest_lag1"] == 1],positions=[1], widths=0.5,showmeans=False, showextrema=False, showmedians=False)
-for pc in violin_parts['bodies']:
-    pc.set_facecolor(colors[0])
-    
-x_vals=x[["d_riot_lag1"]].reset_index(drop=True)
-y_vals=pd.DataFrame(history_riot_shap[:,:,1])[0].reset_index(drop=True)
-violin_parts=ax.violinplot(y_vals.loc[x_vals["d_riot_lag1"] == 0],positions=[0], widths=0.5,showmeans=False, showextrema=False, showmedians=False)
-for pc in violin_parts['bodies']:
-    pc.set_facecolor(colors[1])
-violin_parts=ax.violinplot(y_vals.loc[x_vals["d_riot_lag1"] == 1],positions=[1], widths=0.5,showmeans=False, showextrema=False, showmedians=False)
-for pc in violin_parts['bodies']:
-    pc.set_facecolor(colors[1])
-    
-x_vals=x[["d_remote_lag1"]].reset_index(drop=True)
-y_vals=pd.DataFrame(history_terror_shap[:,:,1])[0].reset_index(drop=True)
-violin_parts=ax.violinplot(y_vals.loc[x_vals["d_remote_lag1"] == 0],positions=[0], widths=0.5,showmeans=False, showextrema=False, showmedians=False)
-for pc in violin_parts['bodies']:
-    pc.set_facecolor(colors[2])
-violin_parts=ax.violinplot(y_vals.loc[x_vals["d_remote_lag1"] == 1],positions=[1], widths=0.5,showmeans=False, showextrema=False, showmedians=False)
-for pc in violin_parts['bodies']:
-    pc.set_facecolor(colors[2])
-        
-x=pd.read_csv("out/df_conf_hist_full.csv",index_col=0)
-x_vals=x[["d_sb_lag1"]].reset_index(drop=True)
-y_vals=pd.DataFrame(history_sb_shap[:,:,1])[0].reset_index(drop=True)
-violin_parts=ax.violinplot(y_vals.loc[x_vals["d_sb_lag1"] == 0],positions=[0], widths=0.5,showmeans=False, showextrema=False, showmedians=False)
-for pc in violin_parts['bodies']:
-    pc.set_facecolor(colors[3])
-violin_parts=ax.violinplot(y_vals.loc[x_vals["d_sb_lag1"] == 1],positions=[1], widths=0.5,showmeans=False, showextrema=False, showmedians=False)
-for pc in violin_parts['bodies']:
-    pc.set_facecolor(colors[3])
-    
-x_vals=x[["d_ns_lag1"]].reset_index(drop=True)
-y_vals=pd.DataFrame(history_ns_shap[:,:,1])[0].reset_index(drop=True)
-violin_parts=ax.violinplot(y_vals.loc[x_vals["d_ns_lag1"] == 0],positions=[0], widths=0.5,showmeans=False, showextrema=False, showmedians=False)
-for pc in violin_parts['bodies']:
-    pc.set_facecolor(colors[4])
-violin_parts=ax.violinplot(y_vals.loc[x_vals["d_ns_lag1"] == 1],positions=[1], widths=0.5,showmeans=False, showextrema=False, showmedians=False)
-for pc in violin_parts['bodies']:
-    pc.set_facecolor(colors[4])
-                
-x_vals=x[["d_osv_lag1"]].reset_index(drop=True)
-y_vals=pd.DataFrame(history_osv_shap[:,:,1])[0].reset_index(drop=True)
-violin_parts=ax.violinplot(y_vals.loc[x_vals["d_osv_lag1"] == 0],positions=[0], widths=0.5,showmeans=False, showextrema=False, showmedians=False)
-for pc in violin_parts['bodies']:
-    pc.set_facecolor(colors[5])
-violin_parts=ax.violinplot(y_vals.loc[x_vals["d_osv_lag1"] == 1],positions=[1], widths=0.5,showmeans=False, showextrema=False, showmedians=False)
-for pc in violin_parts['bodies']:
-    pc.set_facecolor(colors[5])
-                    
-# Create custom legend
-handles = [
-    mpatches.Patch(color='forestgreen', label='Protest'),
-    mpatches.Patch(color='lightgreen', label='Riots'),
-    mpatches.Patch(color='steelblue', label='Remote Violence'),
-    mpatches.Patch(color='lightblue', label='Civil Conflict'),
-    mpatches.Patch(color='purple', label='Non-state'),
-    mpatches.Patch(color='violet', label='One-sided')]
-
-legend1=ax.legend(handles=handles, title='Outcomes', loc='center left', bbox_to_anchor=(1, 0.7),frameon=False,fontsize=15,title_fontsize=15)
-                
-plt.xlabel("t-1 lag",size=20)
-plt.ylabel("SHAP value",size=20)
-plt.yticks(size=20)
-plt.xticks([0,1],["0","1"],size=20)
-plt.xlim(-0.5, 1.5)  
-   
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/shap_scatter_hist.png",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/shap_scatter_hist.png",dpi=400,bbox_inches="tight")
-plt.savefig("out/shap_scatter_hist.png",dpi=400,bbox_inches="tight")
-plt.show()             
-
-
-### Demography ###
-
-
-s_protest = pd.DataFrame(list(zip(demog_theme, np.abs(demog_protest_shap[:, :, 1]).mean(0))),columns=['Feature','Protest'])
-shap_demog_hist = s_protest[~s_protest['Feature'].str.contains('_id')]
-
-s_riot = pd.DataFrame(list(zip(demog_theme, np.abs(demog_riot_shap[:, :, 1]).mean(0))),columns=['Feature','Riot'])
-shap_demog_hist = pd.merge(shap_demog_hist, s_riot[~s_riot['Feature'].str.contains('_id')],on=["Feature"])
-
-s_remote = pd.DataFrame(list(zip(demog_theme, np.abs(demog_terror_shap[:, :, 1]).mean(0))),columns=['Feature','Remote'])
-shap_demog_hist = pd.merge(shap_demog_hist, s_remote[~s_remote['Feature'].str.contains('_id')],on=["Feature"])
-
-s_sb = pd.DataFrame(list(zip(demog_theme, np.abs(demog_sb_shap[:, :, 1]).mean(0))),columns=['Feature','State-based'])
-shap_demog_hist = pd.merge(shap_demog_hist, s_sb[~s_sb['Feature'].str.contains('_id')],on=["Feature"])
-
-s_osv = pd.DataFrame(list(zip(demog_theme, np.abs(demog_osv_shap[:, :, 1]).mean(0))),columns=['Feature','One-sided'])
-shap_demog_hist = pd.merge(shap_demog_hist, s_osv[~s_osv['Feature'].str.contains('_id')],on=["Feature"])
-
-s_ns = pd.DataFrame(list(zip(demog_theme, np.abs(demog_ns_shap[:, :, 1]).mean(0))),columns=['Feature','Non-state'])
-shap_demog_hist = pd.merge(shap_demog_hist, s_ns[~s_ns['Feature'].str.contains('_id')],on=["Feature"])
-
-colors=["forestgreen","lightgreen","steelblue","lightblue","purple","violet"]
-shap_demog_hist=shap_demog_hist.loc[shap_demog_hist.iloc[:, 1:].max(axis=1).sort_values()[-6:].index]
-shap_demog_hist_s=shap_demog_hist.iloc[:, 1:]
-
-
-y = np.arange(len(shap_demog_hist_s.index))
-bar_height = 0.8
-bottom = np.zeros(len(shap_demog_hist_s.index))
-
-fig, ax = plt.subplots(figsize=(10, 6))
-
-for i, col in enumerate(shap_demog_hist_s.columns):
-    ax.barh(y, shap_demog_hist_s[col], left=bottom, height=bar_height, label=col, color=colors[i])
-    bottom += shap_demog_hist_s[col]
-
-# Create custom legend
-handles = [
-    mpatches.Patch(color='forestgreen', label='Protest'),
-    mpatches.Patch(color='lightgreen', label='Riots'),
-    mpatches.Patch(color='steelblue', label='Remote Violence'),
-    mpatches.Patch(color='lightblue', label='Civil Conflict'),
-    mpatches.Patch(color='purple', label='Non-state'),
-    mpatches.Patch(color='violet', label='One-sided')]
-
-legend1=ax.legend(handles=handles, title='Outcomes', loc='center left', bbox_to_anchor=(1, 0.7),frameon=False,fontsize=15,title_fontsize=15)
-ax.set_yticks([0,1,2,3,4,5],["Population density","Male population, 20-24","Male population, 0-14","Religious fractionalization","Population size","Male population, 15-19"],size=15)
-ax.set_xticks([0,0.1,0.2,0.3,0.4,0.5],[0,0.1,0.2,0.3,0.4,0.5],size=15)
-
-ax.set_xlabel("SHAP Values",size=20)
-
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/imp_demog.png",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/imp_demog.png",dpi=400,bbox_inches="tight")
-plt.savefig("out/imp_demog.png",dpi=400,bbox_inches="tight")
-plt.show()
-
-base=pd.read_csv("data/data_out/acled_cy_protest.csv",index_col=0)
-base = base[["year","gw_codes"]][~base['gw_codes'].isin(list(exclude.values()))]
-x=pd.read_csv("out/df_demog_full.csv",index_col=0)
-x=pd.merge(left=base,right=x,on=["year","gw_codes"],how="left")
-x["pop"]=np.log(x["pop"]+1)
-
-fig,ax = plt.subplots(figsize=(12, 8))
-plt.scatter(x[["pop"]],pd.DataFrame(demog_protest_shap[:,:,1])[0],color=colors[0],s=60)
-sns.rugplot(x["pop"], color=colors[0],height=0.06)
-plt.scatter(x[["pop"]],pd.DataFrame(demog_riot_shap[:,:,1])[0],color=colors[1],s=60)
-sns.rugplot(x["pop"], color=colors[1],height=0.05)
-plt.scatter(x[["pop"]],pd.DataFrame(demog_terror_shap[:,:,1])[0],color=colors[2],s=60)
-sns.rugplot(x["pop"], color=colors[2],height=0.04)
-
-x=pd.read_csv("out/df_demog_full.csv",index_col=0)
-x["pop"]=np.log(x["pop"]+1)
-plt.scatter(x[["pop"]],pd.DataFrame(demog_sb_shap[:,:,1])[0],color=colors[3],s=60)
-sns.rugplot(x["pop"], color=colors[3],height=0.03)
-plt.scatter(x[["pop"]],pd.DataFrame(demog_ns_shap[:,:,1])[0],color=colors[4],s=60)
-sns.rugplot(x["pop"], color=colors[4],height=0.02)
-plt.scatter(x[["pop"]],pd.DataFrame(demog_osv_shap[:,:,1])[0],color=colors[5],s=60)
-sns.rugplot(x["pop"], color=colors[5],height=0.01)
-
-plt.xlabel("Population size",size=20)
-plt.ylabel("SHAP value",size=20)
-# Create custom legend
-handles = [
-    mpatches.Patch(color='forestgreen', label='Protest'),
-    mpatches.Patch(color='lightgreen', label='Riots'),
-    mpatches.Patch(color='steelblue', label='Remote Violence'),
-    mpatches.Patch(color='lightblue', label='Civil Conflict'),
-    mpatches.Patch(color='purple', label='Non-state'),
-    mpatches.Patch(color='violet', label='One-sided')]
-
-legend1=ax.legend(handles=handles, title='Outcomes', loc='center left', bbox_to_anchor=(1, 0.7),frameon=False,fontsize=15,title_fontsize=15)
-ax.set_yticks([-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6],[-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6],size=15)
-ax.set_xticks([12,13,14,15,16,17,18,19,20,21,22],[12,13,14,15,16,17,18,19,20,21,22],size=15)
-ax.set_ylim(-0.3, 0.6)                
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/shap_scatter_pop.png",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/shap_scatter_pop.png",dpi=400,bbox_inches="tight")
-plt.savefig("out/shap_scatter_pop.png",dpi=400,bbox_inches="tight")
-plt.show()
-
-base=pd.read_csv("data/data_out/acled_cy_protest.csv",index_col=0)
-base = base[["year","gw_codes"]][~base['gw_codes'].isin(list(exclude.values()))]
-x=pd.read_csv("out/df_demog_full.csv",index_col=0)
-x=pd.merge(left=base,right=x,on=["year","gw_codes"],how="left")
-
-fig,ax = plt.subplots(figsize=(12, 8))
-plt.scatter(x[["pop_male_share_0_14"]],pd.DataFrame(demog_protest_shap[:,:,1])[6],color=colors[0],s=60)
-sns.rugplot(x["pop_male_share_0_14"], color=colors[0],height=0.06)
-plt.scatter(x[["pop_male_share_0_14"]],pd.DataFrame(demog_riot_shap[:,:,1])[6],color=colors[1],s=60)
-sns.rugplot(x["pop_male_share_0_14"], color=colors[1],height=0.05)
-
-
-plt.scatter(x[["pop_male_share_0_14"]],pd.DataFrame(demog_terror_shap[:,:,1])[6],color=colors[2],s=60)
-sns.rugplot(x["pop_male_share_0_14"], color=colors[2],height=0.04)
-
-x=pd.read_csv("out/df_demog_full.csv",index_col=0)
-plt.scatter(x[["pop_male_share_0_14"]],pd.DataFrame(demog_sb_shap[:,:,1])[6],color=colors[3],s=60)
-sns.rugplot(x["pop_male_share_0_14"], color=colors[3],height=0.03)
-plt.scatter(x[["pop_male_share_0_14"]],pd.DataFrame(demog_ns_shap[:,:,1])[6],color=colors[4],s=60)
-sns.rugplot(x["pop_male_share_0_14"], color=colors[4],height=0.02)
-plt.scatter(x[["pop_male_share_0_14"]],pd.DataFrame(demog_osv_shap[:,:,1])[6],color=colors[5],s=60)
-sns.rugplot(x["pop_male_share_0_14"], color=colors[5],height=0.01)
-
-plt.xlabel("Male population, 0-14",size=20)
-plt.ylabel("SHAP value",size=20)
-# Create custom legend
-handles = [
-    mpatches.Patch(color='forestgreen', label='Protest'),
-    mpatches.Patch(color='lightgreen', label='Riots'),
-    mpatches.Patch(color='steelblue', label='Remote Violence'),
-    mpatches.Patch(color='lightblue', label='Civil Conflict'),
-    mpatches.Patch(color='purple', label='Non-state'),
-    mpatches.Patch(color='violet', label='One-sided')]
-
-legend1=ax.legend(handles=handles, title='Outcomes', loc='center left', bbox_to_anchor=(1, 0.7),frameon=False,fontsize=15,title_fontsize=15)
-#ax.set_yticks([-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6],[-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6],size=15)
-#ax.set_xticks([12,13,14,15,16,17,18,19,20,21,22],[12,13,14,15,16,17,18,19,20,21,22],size=15)
-ax.set_ylim(-0.2, 0.3)                
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/shap_scatter_pop_male.png",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/shap_scatter_pop_male.png",dpi=400,bbox_inches="tight")
-plt.savefig("out/shap_scatter_pop_male.png",dpi=400,bbox_inches="tight")
-plt.show()
-
-
-
-### Environment ###
-
-
-
-
-
-s_protest = pd.DataFrame(list(zip(geog_theme, np.abs(geog_protest_shap[:, :, 1]).mean(0))),columns=['Feature','Protest'])
-shap_geog_hist = s_protest[~s_protest['Feature'].str.contains('_id')]
-
-s_riot = pd.DataFrame(list(zip(geog_theme, np.abs(geog_riot_shap[:, :, 1]).mean(0))),columns=['Feature','Riot'])
-shap_geog_hist = pd.merge(shap_geog_hist, s_riot[~s_riot['Feature'].str.contains('_id')],on=["Feature"])
-
-s_remote = pd.DataFrame(list(zip(geog_theme, np.abs(geog_terror_shap[:, :, 1]).mean(0))),columns=['Feature','Remote'])
-shap_geog_hist = pd.merge(shap_geog_hist, s_remote[~s_remote['Feature'].str.contains('_id')],on=["Feature"])
-
-s_sb = pd.DataFrame(list(zip(geog_theme, np.abs(geog_sb_shap[:, :, 1]).mean(0))),columns=['Feature','State-based'])
-shap_geog_hist = pd.merge(shap_geog_hist, s_sb[~s_sb['Feature'].str.contains('_id')],on=["Feature"])
-
-s_osv = pd.DataFrame(list(zip(geog_theme, np.abs(geog_osv_shap[:, :, 1]).mean(0))),columns=['Feature','One-sided'])
-shap_geog_hist = pd.merge(shap_geog_hist, s_osv[~s_osv['Feature'].str.contains('_id')],on=["Feature"])
-
-s_ns = pd.DataFrame(list(zip(geog_theme, np.abs(geog_ns_shap[:, :, 1]).mean(0))),columns=['Feature','Non-state'])
-shap_geog_hist = pd.merge(shap_geog_hist, s_ns[~s_ns['Feature'].str.contains('_id')],on=["Feature"])
-
-colors=["forestgreen","lightgreen","steelblue","lightblue","purple","violet"]
-shap_geog_hist=shap_geog_hist.loc[shap_geog_hist.iloc[:, 1:].max(axis=1).sort_values()[-6:].index]
-shap_geog_hist_s=shap_geog_hist.iloc[:, 1:]
-
-
-y = np.arange(len(shap_geog_hist_s.index))
-bar_height = 0.8
-bottom = np.zeros(len(shap_geog_hist_s.index))
-
-fig, ax = plt.subplots(figsize=(10, 6))
-
-for i, col in enumerate(shap_geog_hist_s.columns):
-    ax.barh(y, shap_geog_hist_s[col], left=bottom, height=bar_height, label=col, color=colors[i])
-    bottom += shap_geog_hist_s[col]
-
-# Create custom legend
-handles = [
-    mpatches.Patch(color='forestgreen', label='Protest'),
-    mpatches.Patch(color='lightgreen', label='Riots'),
-    mpatches.Patch(color='steelblue', label='Remote Violence'),
-    mpatches.Patch(color='lightblue', label='Civil Conflict'),
-    mpatches.Patch(color='purple', label='Non-state'),
-    mpatches.Patch(color='violet', label='One-sided')]
-
-legend1=ax.legend(handles=handles, title='Outcomes', loc='center left', bbox_to_anchor=(1, 0.7),frameon=False,fontsize=15,title_fontsize=15)
-ax.set_yticks([0,1,2,3,4,5],["Africa","Land area","Neighbor non-democratic","CO2","Waterstress","Percipitation"],size=15)
-ax.set_xticks([0,0.1,0.2,0.3],[0,0.1,0.2,0.3],size=15)
-
-ax.set_xlabel("SHAP Values",size=20)
-
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/imp_geog.png",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/imp_geog.png",dpi=400,bbox_inches="tight")
-plt.savefig("out/imp_geog.png",dpi=400,bbox_inches="tight")
-plt.show()
-
-
-
-base=pd.read_csv("data/data_out/acled_cy_protest.csv",index_col=0)
-base = base[["year","gw_codes"]][~base['gw_codes'].isin(list(exclude.values()))]
-x=pd.read_csv("out/df_geog_full.csv",index_col=0)
-x=pd.merge(left=base,right=x,on=["year","gw_codes"],how="left")
-x["waterstress"]=np.log(x["waterstress"]+1)
-
-fig,ax = plt.subplots(figsize=(12, 8))
-plt.scatter(x[["waterstress"]],pd.DataFrame(geog_protest_shap[:,:,1])[9],color=colors[0],s=60)
-sns.rugplot(x["waterstress"], color=colors[0],height=0.06)
-plt.scatter(x[["waterstress"]],pd.DataFrame(geog_riot_shap[:,:,1])[9],color=colors[1],s=60)
-sns.rugplot(x["waterstress"], color=colors[1],height=0.05)
-plt.scatter(x[["waterstress"]],pd.DataFrame(geog_terror_shap[:,:,1])[9],color=colors[2],s=60)
-sns.rugplot(x["waterstress"], color=colors[2],height=0.04)
-
-x=pd.read_csv("out/df_geog_full.csv",index_col=0)
-x["waterstress"]=np.log(x["waterstress"]+1)
-
-plt.scatter(x[["waterstress"]],pd.DataFrame(geog_sb_shap[:,:,1])[9],color=colors[3],s=60)
-sns.rugplot(x["waterstress"], color=colors[3],height=0.03)
-plt.scatter(x[["waterstress"]],pd.DataFrame(geog_ns_shap[:,:,1])[9],color=colors[4],s=60)
-sns.rugplot(x["waterstress"], color=colors[4],height=0.02)
-plt.scatter(x[["waterstress"]],pd.DataFrame(geog_osv_shap[:,:,1])[9],color=colors[5],s=60)
-sns.rugplot(x["waterstress"], color=colors[5],height=0.01)
-
-plt.xlabel("Male population, 0-14",size=20)
-plt.ylabel("SHAP value",size=20)
-# Create custom legend
-handles = [
-    mpatches.Patch(color='forestgreen', label='Protest'),
-    mpatches.Patch(color='lightgreen', label='Riots'),
-    mpatches.Patch(color='steelblue', label='Remote Violence'),
-    mpatches.Patch(color='lightblue', label='Civil Conflict'),
-    mpatches.Patch(color='purple', label='Non-state'),
-    mpatches.Patch(color='violet', label='One-sided')]
-
-legend1=ax.legend(handles=handles, title='Outcomes', loc='center left', bbox_to_anchor=(1, 0.7),frameon=False,fontsize=15,title_fontsize=15)
-#ax.set_yticks([-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6],[-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6],size=15)
-#ax.set_xticks([12,13,14,15,16,17,18,19,20,21,22],[12,13,14,15,16,17,18,19,20,21,22],size=15)
-ax.set_ylim(-0.2, 0.3)                
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/structural/out/shap_scatter_geog.png",dpi=400,bbox_inches="tight")
-plt.savefig("/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/shap_scatter_geog.png",dpi=400,bbox_inches="tight")
-plt.savefig("out/shap_scatter_geog.png",dpi=400,bbox_inches="tight")
-plt.show()
-
-
-
-
-
-
-
