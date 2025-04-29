@@ -24,10 +24,10 @@ plt.rcParams.update(plot_params)
 
 # Simple random forest
 random_grid = {'n_estimators': [int(x) for x in np.linspace(start = 10, stop = 2000, num = 10)],
-               #'max_features': ["sqrt", "log2", None],
-               #'max_depth': [int(x) for x in np.linspace(10, 110, num = 11)]+[None],
-               #'min_samples_split': [2,5,10],
-               #'min_samples_leaf': [1,2,4],
+               'max_features': ["sqrt", "log2", None],
+               'max_depth': [int(x) for x in np.linspace(10, 110, num = 11)]+[None],
+               'min_samples_split': [2,5,10],
+               'min_samples_leaf': [1,2,4],
                }
 
 
@@ -213,6 +213,7 @@ ensemble = (history_protest_df.preds_proba*weights_protest_n[0])+(demog_protest_
 ensemble_protest=pd.concat([history_protest_df[["country","dd","d_protest","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_protest.columns=["country","dd","d_protest","test","preds_proba"]
 ensemble_protest=ensemble_protest.reset_index(drop=True)
+ensemble_protest.to_csv("out/ensemble_protest.csv")
 
                                     #############
                                     ### Riots ###
@@ -342,6 +343,8 @@ ensemble = (history_riot_df.preds_proba*weights_riot_n[0])+(demog_riot_df.preds_
 ensemble_riot=pd.concat([history_riot_df[["country","dd","d_riot","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_riot.columns=["country","dd","d_riot","test","preds_proba"]
 ensemble_riot=ensemble_riot.reset_index(drop=True)
+ensemble_riot.to_csv("out/ensemble_riot.csv")
+
 
                                 #################
                                 ### Terrorism ###
@@ -468,6 +471,7 @@ ensemble = (history_terror_df.preds_proba*weights_terror_n[0])+(demog_terror_df.
 ensemble_terror=pd.concat([history_terror_df[["country","dd","d_terror","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_terror.columns=["country","dd","d_terror","test","preds_proba"]
 ensemble_terror=ensemble_terror.reset_index(drop=True)
+ensemble_terror.to_csv("out/ensemble_terror.csv")
 
                             ###################
                             ### State-based ###
@@ -588,6 +592,7 @@ ensemble = (history_sb_df.preds_proba*weights_sb_n[0])+(demog_sb_df.preds_proba*
 ensemble_sb=pd.concat([history_sb_df[["country","dd","d_sb","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_sb.columns=["country","dd","d_sb","test","preds_proba"]
 ensemble_sb=ensemble_sb.reset_index(drop=True)
+ensemble_sb.to_csv("out/ensemble_sb.csv")
 
                             ##########################
                             ### One-sided violence ###
@@ -707,6 +712,7 @@ ensemble = (history_osv_df.preds_proba*weights_osv_n[0])+(demog_osv_df.preds_pro
 ensemble_osv=pd.concat([history_osv_df[["country","dd","d_osv","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_osv.columns=["country","dd","d_osv","test","preds_proba"]
 ensemble_osv=ensemble_osv.reset_index(drop=True)
+ensemble_osv.to_csv("out/ensemble_osv.csv")
 
                             #######################
                             ### Non-state based ###
@@ -826,6 +832,7 @@ ensemble = (history_ns_df.preds_proba*weights_ns_n[0])+(demog_ns_df.preds_proba*
 ensemble_ns=pd.concat([history_ns_df[["country","dd","d_ns","test"]],pd.DataFrame(ensemble)],axis=1)
 ensemble_ns.columns=["country","dd","d_ns","test","preds_proba"]
 ensemble_ns=ensemble_ns.reset_index(drop=True)
+ensemble_ns.to_csv("out/ensemble_ns.csv")
 
                 ################################
                 ################################
