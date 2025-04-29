@@ -30,6 +30,7 @@ import seaborn as sns
 from itertools import combinations
 from sklearn.utils import resample
 from sklearn.svm import SVR
+from joblib import parallel_backend
 
 ################
 ### Get data ###
@@ -449,8 +450,9 @@ def multivariate_imp_tree(df, country, vars_input,vars_add=None, max_iter=10,min
     df_input = df_MICE.fillna(0)
     df_input_x = df_input.drop(columns=vars_input)
 
-    grid_search = GridSearchCV(estimator=RandomForestRegressor(), param_grid=random_grid, cv=ps, verbose=0, n_jobs=-1)
-    grid_search.fit(df_input_x, df_input[vars_input].values.ravel())
+    with parallel_backend('threading'):
+        grid_search = GridSearchCV(estimator=RandomForestRegressor(), param_grid=random_grid, cv=ps, verbose=0, n_jobs=-1)
+        grid_search.fit(df_input_x, df_input[vars_input].values.ravel())
     best_params = grid_search.best_params_
 
     imputer = IterativeImputer(estimator=RandomForestRegressor(**best_params, random_state=0),random_state=1, max_iter=max_iter, min_value=min_val)
@@ -534,7 +536,7 @@ def imp_opti(df, country, vars_input, vars_add=None, max_iter=10,min_val=0,time=
         print("Selected method: Linear")
         return _        
 
-def simple_imp_grouped(df, group, vars_input):
+def simple_imp_grouped(df, group, vars_input,time="year",last_train=2013):
     
     ### Split data ###
     train = pd.DataFrame()
@@ -543,8 +545,8 @@ def simple_imp_grouped(df, group, vars_input):
         df_s = df.loc[df["country"] == c]
 
         # Train, test
-        train_s = df_s[:int(0.8*len(df_s))]
-        test_s = df_s[int(0.8*len(df_s)):]
+        train_s = df_s.loc[df_s[time]<=last_train]
+        test_s = df_s.loc[df_s[time]>last_train]
 
         # Merge
         train = pd.concat([train, train_s])
@@ -587,7 +589,7 @@ def simple_imp_grouped(df, group, vars_input):
     
     return _
 
-def linear_imp_grouped(df, group, vars_input):
+def linear_imp_grouped(df, group, vars_input,time="year",last_train=2013):
     
     ### Split data ###
     train = pd.DataFrame()
@@ -596,8 +598,8 @@ def linear_imp_grouped(df, group, vars_input):
         df_s = df.loc[df["country"] == c]
 
         # Train, test
-        train_s = df_s[:int(0.8*len(df_s))]
-        test_s = df_s[int(0.8*len(df_s)):]
+        train_s = df_s.loc[df_s[time]<=last_train]
+        test_s = df_s.loc[df_s[time]>last_train]
 
         # Merge
         train = pd.concat([train, train_s])
@@ -818,8 +820,9 @@ def gen_model(y, x, target, inputs, name, names=None, model_fit=LinearRegression
                 
     if opti_grid is not None:
         ps = PredefinedSplit(test_fold=splits)
-        grid_search = GridSearchCV(estimator=model_fit, param_grid=opti_grid, cv=ps, verbose=0, n_jobs=-1)
-        grid_search.fit(train_x_d, train_y_d.values.ravel())
+        with parallel_backend('threading'):
+            grid_search = GridSearchCV(estimator=model_fit, param_grid=opti_grid, cv=ps, verbose=0, n_jobs=-1)
+            grid_search.fit(train_x_d, train_y_d.values.ravel())
         best_params = grid_search.best_params_
         model_fit.set_params(**best_params)
         model = model_fit
