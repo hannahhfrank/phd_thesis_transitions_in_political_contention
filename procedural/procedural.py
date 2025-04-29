@@ -15,6 +15,17 @@ import random
 random.seed(42)
 import warnings
 warnings.filterwarnings('ignore', category=RuntimeWarning)
+import matplotlib as mpl
+import os
+os.environ['PATH'] = "/Library/TeX/texbin:" + os.environ.get('PATH', '')
+mpl.rcParams['text.usetex'] = True
+mpl.rcParams['font.family'] = 'serif'
+mpl.rcParams['font.serif'] = ['Computer Modern Roman']
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{lmodern}\usepackage[T1]{fontenc}'
+
+
+plt.rcParams['xtick.labelsize'] = 20  # X-axis tick label size
+plt.rcParams['ytick.labelsize'] = 20  # Y-axis tick label size
 
 # Simple random forest
 random_grid = {'n_estimators': [int(x) for x in np.linspace(start = 10, stop = 2000, num = 10)],
@@ -153,13 +164,18 @@ for c in ensemble_ens.country.unique():
         fig.delaxes(axes[i])
     #plt.suptitle(c, fontsize=30)
     if c in selects:
-        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/procedural/out/proc_latent_{c}.png",dpi=300,bbox_inches='tight')        
-        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/proc_latent_{c}.png",dpi=300,bbox_inches='tight')
-        plt.savefig(f"out/proc_latent_{c}.png",dpi=300,bbox_inches='tight')    
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/procedural/out/proc_latent_{c}.eps",dpi=300,bbox_inches='tight')        
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/proc_latent_{c}.eps",dpi=300,bbox_inches='tight')
+        plt.savefig(f"out/proc_latent_{c}.eps",dpi=300,bbox_inches='tight')    
     plt.show()   
 
 
 # Get Onset catcher predictions
+
+#################
+### Test 2022 ###
+#################
+
 test_score=0
 w1, w2 = 0.8, 0.2
 
@@ -217,8 +233,12 @@ for ar in [2,3,4,5,6,7,8,9,10]:
         train_x_d=train_x.drop(columns=["country","dd"])
         train_y_val_d=train_y_val.drop(columns=["country","dd"])
         train_x_val_d=train_x_val.drop(columns=["country","dd"])
-        test_y_d=test_y.drop(columns=["country","dd"])
-        test_x_d=test_x.drop(columns=["country","dd"])
+        
+        # Get test for last 12 months
+        test_y_s=test_y.loc[(test_y["dd"]>="2021-01")&(test_y["dd"]<="2021-12")]
+        test_y_d=test_y_s.drop(columns=["country","dd"])
+        test_x_s=test_x.loc[(test_x["dd"]>="2021-01")&(test_x["dd"]<="2021-12")]
+        test_x_d=test_x_s.drop(columns=["country","dd"])
         
         # Train model  
         ps = PredefinedSplit(test_fold=splits)
@@ -228,18 +248,32 @@ for ar in [2,3,4,5,6,7,8,9,10]:
         model=RandomForestRegressor(random_state=1,**best_params)
         model.fit(train_x_d, train_y_d.values.ravel())
         
-        
+        # Predictions
         pred = pd.DataFrame(model.predict(test_x_d))
-        pred["country"]=test_x["country"].values
-        pred["dd"]=test_x["dd"].values
-        base=df[["country","dd","sb_fatalities"]].loc[(df["dd"]>="2020-01")]
+        pred["country"]=test_y_s.country.values
+        pred["dd"]=test_y_s.dd.values
+        pred['dd'] = pred['dd'].str.replace('2021', '2022')
+        base=df[["country","dd","sb_fatalities"]].loc[(df["dd"]>="2022-01")&(df["dd"]<="2022-12")]
         catcher=pd.merge(base,pred,on=["country","dd"],how="left")
         catcher.columns=["country","dd","sb_fatalities","preds"]
         catcher=catcher.fillna(0)
         catcher=catcher.sort_values(by=["country","dd"])
         
-        catcher_s=catcher.loc[(catcher["dd"]>="2020-01")&(catcher["dd"]<="2021-12")]
-        onset, de = evals(catcher_s.sb_fatalities, catcher_s.preds, catcher_s.country)
+        # Validation
+        test_y_s=test_y.loc[(test_y["dd"]>="2020-01")&(test_y["dd"]<="2021-12")]
+        test_y_d=test_y_s.drop(columns=["country","dd"])
+        test_x_s=test_x.loc[(test_x["dd"]>="2020-01")&(test_x["dd"]<="2021-12")]
+        test_x_d=test_x_s.drop(columns=["country","dd"])
+        pred = pd.DataFrame(model.predict(test_x_d))
+        pred["country"]=test_y_s.country.values
+        pred["dd"]=test_y_s.dd.values
+        base=df[["country","dd","sb_fatalities"]].loc[(df["dd"]>="2020-01")&(df["dd"]<="2021-12")]
+        val=pd.merge(base,pred,on=["country","dd"],how="left")
+        val.columns=["country","dd","sb_fatalities","preds"]
+        val=val.fillna(0)
+        val=val.sort_values(by=["country","dd"])
+        
+        onset, de = evals(val.sb_fatalities, val.preds, val.country)
         print(onset,de)
         score = w1 * onset + w2 * de
         print(score)
@@ -247,10 +281,120 @@ for ar in [2,3,4,5,6,7,8,9,10]:
         if score>test_score:
             test_score=score
             print(f"Best: ar={ar}, cut={cut}")
-            catcher.to_csv("out/catcher.csv") 
+            catcher.to_csv("out/catcher_2022.csv") 
             
     
+#################
+### Test 2023 ###
+#################
+
+test_score=0
+w1, w2 = 0.8, 0.2
+
+#w1, w2 = 0.8, 0.2
+for ar in [2,3,4,5,6,7,8,9,10]:
+    lags=[]
+
+    for i in range(1,ar):
+        df[f"preds_proba_lag{i}"]=lag_groupped(df,"country","preds_proba",i)
+        lags.append(f"preds_proba_lag{i}")
+        
+    for cut in [0.01,0.05,0.1,0.15,0.2]:
+        df_zero=df.loc[df["preds_proba"]<=cut]
+        df_nonzero=df.loc[df["preds_proba"]>cut]
     
+        # Data split
+        train_y = pd.DataFrame()
+        test_y = pd.DataFrame()
+        train_x = pd.DataFrame()
+        test_x = pd.DataFrame()
+        train_y_val=pd.DataFrame()
+        train_x_val=pd.DataFrame()
+            
+        val_train_index = []
+        val_test_index = []
+            
+        for c in df.country.unique():
+            df_s = df.loc[df["country"] == c]
+            df_nonzero_s = df_nonzero.loc[df_nonzero["country"] == c]
+            
+            # Train, test
+            y_train = df_nonzero_s[["country","dd","sb_fatalities"]].loc[df_nonzero_s["dd"]<"2021-01"]
+            x_train = df_nonzero_s[["country","dd"]+lags].loc[df_nonzero_s["dd"]<"2021-01"]
+            y_test = df_nonzero_s[["country","dd","sb_fatalities"]].loc[(df_nonzero_s["dd"]>="2021-01")]
+            x_test = df_nonzero_s[["country","dd"]+lags].loc[(df_nonzero_s["dd"]>="2021-01")]
+            # Merge
+            train_y = pd.concat([train_y, y_train])
+            test_y = pd.concat([test_y, y_test])
+            train_x = pd.concat([train_x, x_train])
+            test_x = pd.concat([test_x, x_test])
+            
+            # Validation
+            y_train_val = df_nonzero_s[["country","dd","sb_fatalities"]].loc[df_nonzero_s["dd"]<"2023-01"]
+            x_train_val = df_nonzero_s[["country","dd"]+lags].loc[df_nonzero_s["dd"]<"2023-01"]        
+            val_train_index += list(y_train.loc[y_train["dd"]<"2021-01"].index)
+            val_test_index += list(y_test.loc[(y_test["dd"]>="2021-01")&(y_test["dd"]<="2022-12")].index)
+            train_y_val = pd.concat([train_y_val, y_train_val])
+            train_x_val = pd.concat([train_x_val, x_train_val])
+    
+            
+        splits = np.array([-1] * len(val_train_index) + [0] * len(val_test_index))
+        
+        # Train model 
+        train_y_d=train_y.drop(columns=["country","dd"])
+        train_x_d=train_x.drop(columns=["country","dd"])
+        train_y_val_d=train_y_val.drop(columns=["country","dd"])
+        train_x_val_d=train_x_val.drop(columns=["country","dd"])
+        
+        # Get test for last 12 months
+        test_y_s=test_y.loc[(test_y["dd"]>="2022-01")&(test_y["dd"]<="2022-12")]
+        test_y_d=test_y_s.drop(columns=["country","dd"])
+        test_x_s=test_x.loc[(test_x["dd"]>="2022-01")&(test_x["dd"]<="2022-12")]
+        test_x_d=test_x_s.drop(columns=["country","dd"])
+        
+        # Train model  
+        ps = PredefinedSplit(test_fold=splits)
+        grid_search = GridSearchCV(estimator=RandomForestRegressor(random_state=1), param_grid=random_grid, cv=ps, verbose=0, n_jobs=-1)
+        grid_search.fit(train_x_val_d, train_y_val_d.values.ravel())
+        best_params = grid_search.best_params_
+        model=RandomForestRegressor(random_state=1,**best_params)
+        model.fit(train_x_d, train_y_d.values.ravel())
+        
+        # Predictions
+        pred = pd.DataFrame(model.predict(test_x_d))
+        pred["country"]=test_y_s.country.values
+        pred["dd"]=test_y_s.dd.values
+        pred['dd'] = pred['dd'].str.replace('2022', '2023')
+        base=df[["country","dd","sb_fatalities"]].loc[(df["dd"]>="2023-01")&(df["dd"]<="2023-12")]
+        catcher=pd.merge(base,pred,on=["country","dd"],how="left")
+        catcher.columns=["country","dd","sb_fatalities","preds"]
+        catcher=catcher.fillna(0)
+        catcher=catcher.sort_values(by=["country","dd"])
+        
+        # Validation
+        test_y_s=test_y.loc[(test_y["dd"]>="2021-01")&(test_y["dd"]<="2022-12")]
+        test_y_d=test_y_s.drop(columns=["country","dd"])
+        test_x_s=test_x.loc[(test_x["dd"]>="2021-01")&(test_x["dd"]<="2022-12")]
+        test_x_d=test_x_s.drop(columns=["country","dd"])
+        pred = pd.DataFrame(model.predict(test_x_d))
+        pred["country"]=test_y_s.country.values
+        pred["dd"]=test_y_s.dd.values
+        base=df[["country","dd","sb_fatalities"]].loc[(df["dd"]>="2021-01")&(df["dd"]<="2022-12")]
+        val=pd.merge(base,pred,on=["country","dd"],how="left")
+        val.columns=["country","dd","sb_fatalities","preds"]
+        val=val.fillna(0)
+        val=val.sort_values(by=["country","dd"])
+        
+        onset, de = evals(val.sb_fatalities, val.preds, val.country)
+        print(onset,de)
+        score = w1 * onset + w2 * de
+        print(score)
+        
+        if score>test_score:
+            test_score=score
+            print(f"Best: ar={ar}, cut={cut}")
+            catcher.to_csv("out/catcher_2023.csv") 
+                
     
 
 
