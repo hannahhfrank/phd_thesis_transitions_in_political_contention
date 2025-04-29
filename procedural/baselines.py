@@ -17,6 +17,20 @@ from scipy.cluster.hierarchy import linkage, fcluster, dendrogram
 import matplotlib.pyplot as plt 
 from matplotlib import gridspec
 from functions import lag_groupped
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+from matplotlib.ticker import MaxNLocator
+import os
+os.environ['PATH'] = "/Library/TeX/texbin:" + os.environ.get('PATH', '')
+mpl.rcParams['text.usetex'] = True
+mpl.rcParams['font.family'] = 'serif'
+mpl.rcParams['font.serif'] = ['Computer Modern Roman']
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{lmodern}\usepackage[T1]{fontenc}'
+
+
+plt.rcParams['xtick.labelsize'] = 20  # X-axis tick label size
+plt.rcParams['ytick.labelsize'] = 20  # Y-axis tick label size
+
 
 # Country definitions: http://ksgleditsch.com/statelist.html
 
@@ -329,13 +343,13 @@ for c in views_final.gw_codes.unique():
     gs = gridspec.GridSpec(1, 2, figure=fig)
     df_s=views_final.loc[views_final["gw_codes"]==c]
     df_ss=shape_finder.loc[shape_finder["gw_codes"]==c]
-    
     ax1 = fig.add_subplot(gs[0])
     ax1.plot(df_s["dd"].loc[df_s["year"]==2022],df_s["sb_fatalities"].loc[df_s["year"]==2022],color="black")
     ax1.plot(df_s["dd"].loc[df_s["year"]==2022],df_s["preds"].loc[df_s["year"]==2022],color="black",linestyle="dotted")
     ax1.plot(df_ss["dd"].loc[df_ss["year"]==2022],df_ss["preds"].loc[df_ss["year"]==2022],color="black",linestyle="dashed")   
     ax1.set_xticks(["2022-01","2022-03","2022-05","2022-07","2022-09","2022-11"],["01-22","03-22","05-22","07-22","09-22","11-22"])
-    
+    ax1.yaxis.set_major_locator(MaxNLocator(integer=True))
+
     ax2 = fig.add_subplot(gs[1])    
     ax2.plot(df_s["dd"].loc[df_s["year"]==2023],df_s["sb_fatalities"].loc[df_s["year"]==2023],color="black")
     ax2.plot(df_s["dd"].loc[df_s["year"]==2023],df_s["preds"].loc[df_s["year"]==2023],color="black",linestyle="dotted")
@@ -344,12 +358,13 @@ for c in views_final.gw_codes.unique():
     ax2.yaxis.set_ticks_position('right')
     ax2.yaxis.set_label_position('right')
     gs.update(wspace=0)    
-    
+    ax2.yaxis.set_major_locator(MaxNLocator(integer=True))
+   
     #fig.suptitle(views_final["country"].loc[views_final["gw_codes"]==c].iloc[0],size=30)
     if df_ss.preds.max()!=0:
-        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/procedural/out/proc_examples_{views_final['country'].loc[views_final['gw_codes']==c].iloc[0]}.png",dpi=300,bbox_inches='tight')        
-        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/proc_examples_{views_final['country'].loc[views_final['gw_codes']==c].iloc[0]}.png",dpi=300,bbox_inches='tight')
-        plt.savefig(f"out/proc_examples_{views_final['country'].loc[views_final['gw_codes']==c].iloc[0]}.png",dpi=300,bbox_inches='tight')    
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/procedural/out/proc_examples_{views_final['country'].loc[views_final['gw_codes']==c].iloc[0]}.eps",dpi=300,bbox_inches='tight')        
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_dissertation/out/proc_examples_{views_final['country'].loc[views_final['gw_codes']==c].iloc[0]}.eps",dpi=300,bbox_inches='tight')
+        plt.savefig(f"out/proc_examples_{views_final['country'].loc[views_final['gw_codes']==c].iloc[0]}.eps",dpi=300,bbox_inches='tight')    
     plt.show()   
 
 #########################
