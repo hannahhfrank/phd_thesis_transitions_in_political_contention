@@ -12,7 +12,7 @@ rug=pd.read_csv("rugged_data.csv", encoding='latin-1')
 rug_s=rug[["isonum","country","rugged","land_area","soil","desert","tropical","cont_africa","cont_asia"]]
 
 # Get country codes 
-gw_codes=pd.read_csv("/Users/hannahfrank/phd_thesis_transitions_pol_contention/data/data_out/df_ccodes_gw.csv")
+gw_codes=pd.read_csv("df_ccodes_gw.csv")
 gw_codes_s=gw_codes.loc[gw_codes["end"]>=1989]
 
 # Country codes 
