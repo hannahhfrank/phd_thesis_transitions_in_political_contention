@@ -73,9 +73,9 @@ print("Saved DataFrame!")
 
 
 # Validate
-for c in df.country.unique():
-    fig, axs = plt.subplots(figsize=(10, 5))
-    plt.plot(df_agg["year"].loc[df_agg["country"]==c], df_agg["ethnic_frac"].loc[df_agg["country"]==c])
+#for c in df.country.unique():
+#    fig, axs = plt.subplots(figsize=(10, 5))
+#    plt.plot(df_agg["year"].loc[df_agg["country"]==c], df_agg["ethnic_frac"].loc[df_agg["country"]==c])
 
 
 
