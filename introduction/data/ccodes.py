@@ -1,13 +1,6 @@
-### This file generates a csv and dictionary file containing country codes ###
-
-### Load libraries -------
 import pandas as pd
-import os
-import pickle
 
-# Check here: <------
 #https://unstats.un.org/unsd/methodology/m49/
-
 #http://ksgleditsch.com/statelist.html
 #https://dornsife.usc.edu/assets/sites/298/docs/country_to_gwno_PUBLIC_6-5-2015.txt
 #https://wits.worldbank.org/wits/wits/witshelp/content/codes/country_codes.htm
@@ -284,17 +277,14 @@ c_codes = { 'Abkhazia': [396,'XYZ','XYZ','XYZ',99999999,99999999,99999999],
             'Zimbabwe': [552, 'ZWE', '716', 'ZIM', 716, 231, 62],
             }
 
-### Convert dictionary with country codes to df ----
 df_ccodes = pd.DataFrame.from_dict(c_codes,orient='index')
 df_ccodes = df_ccodes.reset_index()
 df_ccodes.columns = ['country','gw_codes','iso_alpha3','M49','StateAbb','acled_codes','gtd_codes',"vdem_codes"]
 
-### Save data ---------
 df_ccodes.to_csv("df_ccodes.csv",index=False,sep=',')
 print("Saved DataFrame!")
 
 # GW country codes
-### Add missing country-months for countries completely missing ------
 # http://ksgleditsch.com/data/iisystem.dat
 # http://ksgleditsch.com/data/microstatessystem.dat
 d={"country":[],"gw_codes":[],"start":[],"end":[]}
@@ -325,7 +315,6 @@ all_countries=pd.DataFrame(d)
 all_countries=all_countries.reset_index()
 all_countries=all_countries[["country","gw_codes","start","end"]]
 
-### Save data ---------
 all_countries.to_csv("df_ccodes_gw.csv",index=False,sep=',')
 print("Saved DataFrame!")
 
