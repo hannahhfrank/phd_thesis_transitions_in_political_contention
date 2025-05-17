@@ -15,6 +15,8 @@ from statsmodels.iolib.summary2 import summary_col
 import random
 random.seed(42)
 import seaborn as sns
+import os 
+os.environ['PATH'] = "/Library/TeX/texbin:" + os.environ.get('PATH', '')
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['font.family'] = 'serif'
 mpl.rcParams['font.serif'] = ['Computer Modern Roman']
@@ -226,9 +228,9 @@ for count in range(0,len(inputs)):
         ax.set_ylabel("Partial dependence, ICE",size=20)
         ax2.set_ylabel("Partial dependence, Average",size=20)
         sns.rugplot(x_d[inputs[count]], height=0.05, color='black')
-        plt.savefig(f"out/intro_partial_depend_{inputs[count]}.eps",dpi=300,bbox_inches='tight')
-        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/introduction/out/intro_partial_depend_{inputs[count]}.eps",dpi=300,bbox_inches='tight')
-        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/intro_partial_depend_{inputs[count]}.eps",dpi=300,bbox_inches='tight')
+        plt.savefig(f"out/intro_partial_depend_{inputs[count]}.png",dpi=300,bbox_inches='tight')
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/introduction/out/intro_partial_depend_{inputs[count]}.png",dpi=300,bbox_inches='tight')
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/intro_partial_depend_{inputs[count]}.png",dpi=300,bbox_inches='tight')
    
     else: 
         pd_results = partial_dependence(model, x_d, features=count, kind="both", grid_resolution=10,percentiles=(0,1))
@@ -243,9 +245,9 @@ for count in range(0,len(inputs)):
         ax.tick_params(axis='both', which='major', labelsize=20)
         ax2.tick_params(axis='y', which='major', labelsize=20)
         sns.rugplot(x_d[inputs[count]], height=0.05, color='black')
-        plt.savefig(f"out/intro_partial_depend_{inputs[count]}.eps",dpi=300,bbox_inches='tight')
-        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/introduction/out/intro_partial_depend_{inputs[count]}.eps",dpi=300,bbox_inches='tight')
-        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/intro_partial_depend_{inputs[count]}.eps",dpi=300,bbox_inches='tight')
+        plt.savefig(f"out/intro_partial_depend_{inputs[count]}.png",dpi=300,bbox_inches='tight')
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/introduction/out/intro_partial_depend_{inputs[count]}.png",dpi=300,bbox_inches='tight')
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/intro_partial_depend_{inputs[count]}.png",dpi=300,bbox_inches='tight')
       
 # ALE
 for count in range(0,len(inputs)):
@@ -300,9 +302,9 @@ for i in inputs:
         heatmap.set_yticklabels(yticklabels, rotation=45, ha='right')
         cbar = heatmap.collections[0].colorbar
         cbar.set_label('Partial dependence', size=20)
-        plt.savefig(f"out/intro_ale_{i}_{x}.eps",dpi=300,bbox_inches='tight')
-        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/introduction/out/intro_ale_{i}_{x}.eps",dpi=300,bbox_inches='tight')
-        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/intro_ale_{i}_{x}.eps",dpi=300,bbox_inches='tight')
+        plt.savefig(f"out/intro_ale_{i}_{x}.png",dpi=300,bbox_inches='tight')
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/introduction/out/intro_ale_{i}_{x}.png",dpi=300,bbox_inches='tight')
+        plt.savefig(f"/Users/hannahfrank/Dropbox/Apps/Overleaf/PhD_Dissertation/out/intro_ale_{i}_{x}.png",dpi=300,bbox_inches='tight')
 
 #################
 ### OLS model ###
